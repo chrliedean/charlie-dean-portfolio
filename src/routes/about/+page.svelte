@@ -1,0 +1,17 @@
+<p class="paragraph">
+    Charlie Dean is an artist and fabricator originally from Baltimore, MD and currently living and working
+     in Chicago, IL. A graduate of the School of the Art Institute of Chicago, he received his BFA in 2023. 
+     Working in sculpture, video, and various new media technologies, much of his work responds to the way 
+     the infrastructure, systems, and artifacts of the built world influence our culture and behavior. 
+     He has exhibited in Chicago at Ars Electronica, SITE Galleries, and the SAIC Galleries, and in 
+     Baltimore at the Creative Alliance.
+</p>
+<p class="paragraph"> 
+    He is a co-founder of Kiki & Bouba Galleries (currently on hiatus), an artist-run traveling gallery 
+    and collective.
+</p>
+
+<p class="paragraph">
+In addition to his studio practice, Dean also works as a freelance fabrication artist, set & props designer,
+ videographer, and stagehand.
+</p>
