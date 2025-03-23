@@ -4,33 +4,43 @@
     import { page } from '$app/stores';
     import Window from './Window.svelte';
     import { windowConfig } from '../config/windows';
+    //import { openWindows } from '$lib/stores/windows';
   
     interface WindowEntry {
-      id: string;
-      title: string;
-      component: any;
-      route: string;
-      ref?: Window | null;
+        id: string;
+        title: string;
+        component: any;
+        route: string;
+        ref?: Window | null;
+        resizable?: boolean;
+        defaultSize?  : { width: number; height: number };
+
     }
   
-    let openWindows: WindowEntry[] = [];
+    let openWindows: WindowEntry[] = $state([]);
 
     const path = $page.url.pathname;
-    if (path === '/') {
-        openWindows = [
-            {
-                id: 'home',
-                title: '🏠    Home',
-                component: windowConfig['/'].component,
-                route: '/'
-            }
-        ];
+
+    if (windowConfig[path]) {
+        openWindows = [{ ...windowConfig[path], ref: null }];
+    } else if (path === '/') {
+        openWindows = [{ ...windowConfig['/'], ref: null }];
+    }
+
+    function updateDocumentTitle(id: string) {
+        const win = openWindows.find(w => w.id === id);
+        if (win) {
+        document.title = `${win.title} - Charlie Dean`;
+        } else {
+        document.title = "Charlie Dean Portfolio - Charlie Dean";
+        }
     }
 
     function handleWindowFocus(id: string) {
-      if (id === 'home') goto('/');
-      else goto(`/${id}`);
-      console.log('Focused window:', id);
+        updateDocumentTitle(id);
+        if (id === 'home') goto('/');
+        else goto(id);
+        console.log('Focused window:', id);
     }
   
     function bringWindowToFront(id: string) {
@@ -53,6 +63,7 @@
       } else {
         bringWindowToFront(config.id);
       }
+            window.dispatchEvent(new CustomEvent('open-window-handled'));
     }
 
     onMount(() => {
@@ -63,15 +74,31 @@
         window.removeEventListener('open-window', handleOpenWindowListener);
       };
     });
+
+    function handleWindowClose(event: CustomEvent<{ id: string }>) {
+    const { id } = event.detail;
+    openWindows = openWindows.filter(win => win.id !== id);
+    const last = openWindows[openWindows.length - 1];
+    if (last?.ref && typeof last.ref.focus === 'function') {
+        last.ref.focus();
+        updateDocumentTitle(last.id);
+    } else {
+        document.title = "Charlie Dean Portfolio - Charlie Dean";
+    }
+  }
+
+
   </script>
   
   {#each openWindows as win (win.id)}
     <Window
-      title={win.title}
-      route={win.route}
-      on:focus={() => handleWindowFocus(win.id)}
+      {...win}
+      on:focus={(event) => handleWindowFocus(event.detail.id)}
+      on:close={handleWindowClose}
       bind:this={win.ref}
+      minHeight={150}
+      minWidth={300}
     >
-      <svelte:component this={win.component} />
+      <win.component />
     </Window>
   {/each}

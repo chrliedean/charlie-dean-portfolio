@@ -29,9 +29,9 @@ import SmartLink from './SmartLink.svelte';
           <div class="menubar-item-contents"></div>
         </div>
         <nav class="dropdown-menu w-dropdown-list">
-          <a href="#" class="dropdown-link w-dropdown-link">Link 1</a>
-          <a href="#" class="dropdown-link w-dropdown-link">Link 2</a>
-          <a href="#" class="dropdown-link w-dropdown-link">Link 3</a>
+          <a href="#" class="dropdown-link w-dropdown-link">Go to Homepage</a>
+          <a href="#" class="dropdown-link w-dropdown-link">Enter Password...</a>
+          <a href="#" class="dropdown-link w-dropdown-link">About this Website</a>
         </nav>
       </div>
       <SmartLink href="/" classname="menubar-item w-inline-block">
@@ -43,9 +43,9 @@ import SmartLink from './SmartLink.svelte';
       <SmartLink href="/about" classname="menubar-item w-inline-block">
         <div class="menubar-item-contents">About</div>
       </SmartLink>
-      <a href="#" class="menubar-item w-inline-block">
+      <SmartLink href="/contact" classname="menubar-item w-inline-block">
         <div class="menubar-item-contents">Contact</div>
-      </a>
+      </SmartLink>
     </div>
     <div class="menubar-right">
       <div class="menubar-item">

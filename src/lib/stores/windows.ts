@@ -1,35 +1,29 @@
-// import { writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 
-// export interface WindowEntry {
-//   id: string;
-//   title: string;
-//   component: any;
-//   route: string;
-//   ref?: any; // later you can type this more specifically
-// }
+const STORAGE_KEY = 'charlie-portfolio-open-windows';
 
-// function createWindowsStore() {
-//   const { subscribe, update } = writable<WindowEntry[]>([]);
-//   return {
-//     subscribe,
-//     addWindow: (win: WindowEntry) =>
-//       update((wins) => {
-//         // Only add if it doesn't exist already
-//         if (!wins.find((w) => w.id === win.id)) {
-//           console.log(`Adding window: ${win.id}`);
-//           return [...wins, win];
-//         }
-//         return wins;
-//       }),
-//     bringToFront: (id: string) =>
-//       update((wins) => {
-//         const win = wins.find((w) => w.id === id);
-//         if (win && win.ref && typeof win.ref.focus === 'function') {
-//           win.ref.focus();
-//         }
-//         return wins;
-//       }),
-//   };
-// }
+export interface WindowState {
+  id: string;
+  title: string;
+  route: string;
+  defaultSize?: { width: number; height: number };
+  resizable?: boolean;
+}
 
-// export const windows = createWindowsStore();
+function createPersistentWindows() {
+  const initial = typeof localStorage !== 'undefined'
+    ? JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
+    : null;
+
+  const store = writable<WindowState[]>(initial ?? []);
+
+  store.subscribe((windows) => {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(windows));
+    }
+  });
+
+  return store;
+}
+
+export const openWindows = createPersistentWindows();

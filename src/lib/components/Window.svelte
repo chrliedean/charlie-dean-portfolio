@@ -4,9 +4,18 @@
 <script lang="ts">
     import { onMount, tick, createEventDispatcher } from 'svelte';
     import { goto } from '$app/navigation';
+    import { soundCommand } from './SoundEffects.svelte';
+
+    export let id: string;
     export let title = '';
     export let route = '';
-  
+
+    export let defaultSize = { width: 400, height: 300 };
+
+    export let minHeight: number;
+    export let minWidth: number;
+    export let resizable = true;
+
     let windowEl: HTMLDivElement;
     let offset = { x: 0, y: 0 };
     let isDragging = false;
@@ -29,22 +38,50 @@
         windowEl.style.top = `${top}px`;
       });
     }
+    const padding = 10;
 
-    onMount(async () => {
-      const imgs = windowEl.querySelectorAll('img');
-      const loadPromises = Array.from(imgs).map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise(resolve => {
-          img.addEventListener('load', resolve);
-          img.addEventListener('error', resolve); // handle errors too
-        });
-      });
+    onMount(() => {
 
-      await Promise.all(loadPromises);
-      centerWindow();
+        const vw = window.innerWidth - padding * 2;
+        const vh = window.innerHeight - padding * 2;
+
+        const width = Math.min(defaultSize.width, vw);
+        const height = Math.min(defaultSize.height, vh);
+
+        windowEl.style.width = `${Math.max(minWidth, width)}px`;
+        windowEl.style.height = `${Math.max(minHeight, height)}px`;
+        centerWindow();
+
+      // Add event listener to bring window to front when clicked
+      windowEl.addEventListener('mousedown', bringToFront);
+
+      // Add event listener to document to manage active/inactive classes
+      const handleDocumentClick = (event: MouseEvent) => {
+        if (windowEl.contains(event.target as Node)) {
+          windowEl.classList.add('active');
+          windowEl.classList.remove('inactive');
+        } else {
+          windowEl.classList.remove('active');
+          windowEl.classList.add('inactive');
+        }
+      };
+
+      document.addEventListener('mousedown', handleDocumentClick);
+      window.addEventListener('resize', clampPositionToViewport);
+
+      return () => {
+        document.removeEventListener('mousedown', handleDocumentClick);
+        window.removeEventListener('resize', clampPositionToViewport);
+      };
     });
+
+    function handleTitleMouseDown(event: MouseEvent) {
+        if ((event.target as HTMLElement).closest('.titlebar-button')) return;
+        handleMouseDown(event);
+    }
   
     function handleMouseDown(event: MouseEvent) {
+        soundCommand.set('drag-start');
       isDragging = true;
       dragOccurred = false;
       const rect = windowEl.getBoundingClientRect();
@@ -86,6 +123,7 @@
     }
   
     function handleMouseUp() {
+        soundCommand.set('drag-end');
       isDragging = false;
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
@@ -97,6 +135,7 @@
   
     function handleResizeMouseDown(event: MouseEvent) {
       isResizing = true;
+      //soundCommand.set('drag-start');
       resizeStart = { x: event.clientX, y: event.clientY };
       startSize = {
         width: windowEl.offsetWidth,
@@ -110,14 +149,13 @@
       if (!isResizing) return;
       const deltaX = event.clientX - resizeStart.x;
       const deltaY = event.clientY - resizeStart.y;
-      const minWidth = 300;
-      const minHeight = 150;
       windowEl.style.width = `${Math.max(minWidth, startSize.width + deltaX)}px`;
       windowEl.style.height = `${Math.max(minHeight, startSize.height + deltaY)}px`;
     }
   
     function handleResizeMouseUp() {
       isResizing = false;
+      //soundCommand.set('drag-end');
       window.removeEventListener('mousemove', handleResizing);
       window.removeEventListener('mouseup', handleResizeMouseUp);
     }
@@ -126,6 +164,9 @@
     function bringToFront() {
       highestZIndex++;
       windowEl.style.zIndex = `${highestZIndex}`;
+      windowEl.classList.add('active');
+      windowEl.classList.remove('inactive');
+      dispatch('focus', { id });
     }
   
     // When the titlebar is clicked (and no drag occurred), update the URL.
@@ -134,21 +175,40 @@
         goto(route);
       }
     }
-  
+
+    function closeWindow(event: MouseEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        dispatch('close', { id });
+    }
+
+    let minimized = false;
+    function minimizeWindow(event: MouseEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (minimized) {
+            windowEl.classList.remove('minimized');
+            minimized = false;
+            soundCommand.set('wexp');
+        } else {
+            windowEl.classList.add('minimized');
+            minimized = true;
+        }
+    }
+
     export function focus() {
+      windowEl.classList.remove('minimized');  
       bringToFront();
     }
 
-    // Add event listener to bring window to front when clicked
-    onMount(() => {
-      windowEl.addEventListener('mousedown', bringToFront);
-    });
   </script>
   
-  <div bind:this={windowEl} class="window resizable" role="presentation">
-    <div class="titlebar" on:mousedown={handleMouseDown} on:click={handleTitleClick} role="presentation">
+  <div bind:this={windowEl} class="window" class:resizable={resizable} role="presentation">
+    <div class="titlebar" on:mousedown={handleTitleMouseDown} on:click={handleTitleClick} role="presentation">
       <div class="w-layout-hflex title-bar-flexbox">
-        <div class="titlebar-button"></div>
+
+        <div class="titlebar-button" on:click={closeWindow} role="presentation"></div>
         <div class="window-stripes">
           <div class="horizontal-window-stripe"></div>
           <div class="horizontal-window-stripe"></div>
@@ -157,7 +217,9 @@
           <div class="horizontal-window-stripe"></div>
           <div class="horizontal-window-stripe"></div>
         </div>
+
         <h1 class="window-title">{title}</h1>
+
         <div class="window-stripes">
           <div class="horizontal-window-stripe"></div>
           <div class="horizontal-window-stripe"></div>
@@ -167,10 +229,10 @@
           <div class="horizontal-window-stripe"></div>
         </div>
         <div class="titlebar-button">
-          <div class="titlebar-button-minimize"></div>
+          <div class="titlebar-button-zoom"></div>
         </div>
-        <div class="titlebar-button">
-          <div class="titlebar-button-close"></div>
+        <div class="titlebar-button" on:click={minimizeWindow} role="presentation">
+          <div class="titlebar-button-minimize"></div>
         </div>
       </div>
     </div>

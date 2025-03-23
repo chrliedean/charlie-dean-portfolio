@@ -1,3 +1,7 @@
+<svelte:head>
+	<title>Charlie Dean - About</title>
+	<meta name="description" content="This is where the description goes for SEO" />
+</svelte:head>
 <p class="paragraph">
     Charlie Dean is an artist and fabricator originally from Baltimore, MD and currently living and working
      in Chicago, IL. A graduate of the School of the Art Institute of Chicago, he received his BFA in 2023. 
