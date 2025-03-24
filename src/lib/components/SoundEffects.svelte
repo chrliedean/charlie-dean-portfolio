@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
   import { writable } from 'svelte/store';
-  export type SoundCommand = 'drag-start' | 'drag-end' | 'wcol' | 'wexp' | 'mnuo' | 'mnuc';
+  export type SoundCommand = 'drag-start' | 'drag-end' | 'wcol' | 'wexp' | 'mnuo' | 'mnuc' | 'mnui';
   export const soundCommand = writable<SoundCommand | null>(null);
 </script>
 
@@ -63,6 +63,7 @@
         load('wexp', '/media/wexp.mp3', 0.4),
         load('mnuo', '/media/mnuo.mp3', 0.4),
         load('mnuc', '/media/mnuc.mp3', 0.4),
+        load('mnui', '/media/mnui.mp3', 0.4),
       ]);
     })();
 
@@ -78,6 +79,7 @@
       if (cmd === 'wexp') play('wexp');
       if (cmd === 'mnuo') play('mnuo');
       if (cmd === 'mnuc') play('mnuc');
+      if (cmd === 'mnui') play('mnui');
       soundCommand.set(null);
     });
 

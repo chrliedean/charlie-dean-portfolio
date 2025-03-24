@@ -7,7 +7,14 @@ declare global {
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}
+
 	}
 }
+
+declare namespace svelte.JSX {
+	interface HTMLAttributes<T> {
+	  onwindowcancel?: (event: CustomEvent<any>) => void;
+	}
+  }
 
 export {};

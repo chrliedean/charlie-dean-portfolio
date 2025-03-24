@@ -6,6 +6,8 @@
     let isOpen = false;
     let container: HTMLDivElement;
     export let className = '';
+
+    let lastHovered: EventTarget | null = null;
   
     function toggleMenu(e: MouseEvent) {
       e.stopPropagation();
@@ -16,6 +18,14 @@
       if (isOpen && container && !container.contains(e.target as Node)) {
         isOpen = false;
       }
+    }
+
+    function handleHover(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+    if (target !== lastHovered) {
+      lastHovered = target;
+      soundCommand.set('mnui');
+    }
     }
   
     function handleOptionClick(e: MouseEvent) {
@@ -44,7 +54,7 @@
   
     {#if isOpen}
       <!-- Dropdown content closes automatically on click -->
-      <div class="dropdown-content" onclick={handleOptionClick} role="button" tabindex="1">
+      <div class="dropdown-content" onclick={handleOptionClick} onmouseover={handleHover} role="button" tabindex="1">
         <slot></slot>
       </div>
     {/if}

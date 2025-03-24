@@ -8,4 +8,5 @@ export interface WindowEntry {
     component: any;
     currentSize?: { width: number; height: number };
     currentPosition?: { x: number; y: number };
+    style?: string;
   }

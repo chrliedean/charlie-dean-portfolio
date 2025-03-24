@@ -39,7 +39,7 @@
           
             <nav class="dropdown-menu w-dropdown-list">
                 <SmartLink href="/" classname="dropdown-link w-dropdown-link">Go to Homepage</SmartLink>
-                <a href="#" class="dropdown-link w-dropdown-link">Enter Password...</a>
+                <SmartLink href="/enter-password" classname="dropdown-link w-dropdown-link">Enter Password...</SmartLink>
                 <a href="#" class="dropdown-link w-dropdown-link">About this Website</a>
             </nav>
            
