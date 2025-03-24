@@ -194,6 +194,7 @@
         } else {
             windowEl.classList.add('minimized');
             minimized = true;
+            soundCommand.set('wcol');
         }
     }
 

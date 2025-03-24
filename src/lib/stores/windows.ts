@@ -1,29 +1,27 @@
+// src/lib/stores/windows.ts
 import { writable } from 'svelte/store';
+import type { WindowEntry } from '$lib/types/WindowEntry';
 
-const STORAGE_KEY = 'charlie-portfolio-open-windows';
+// Try to load saved state (make sure you only load serializable fields)
+const savedWindowsStr = typeof localStorage !== 'undefined' ? localStorage.getItem('openWindows') : null;
+let initialWindows: WindowEntry[] = savedWindowsStr ? JSON.parse(savedWindowsStr) : [];
 
-export interface WindowState {
-  id: string;
-  title: string;
-  route: string;
-  defaultSize?: { width: number; height: number };
-  resizable?: boolean;
-}
+// Our store starts with the saved state, if any.
+export const openWindows = writable<WindowEntry[]>(initialWindows);
+export const focusedWindow = writable<WindowEntry | null>(null);
 
-function createPersistentWindows() {
-  const initial = typeof localStorage !== 'undefined'
-    ? JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
-    : null;
-
-  const store = writable<WindowState[]>(initial ?? []);
-
-  store.subscribe((windows) => {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(windows));
-    }
-  });
-
-  return store;
-}
-
-export const openWindows = createPersistentWindows();
+// Whenever openWindows changes, persist only serializable fields
+openWindows.subscribe((windows) => {
+  const persistable = windows.map(({ id, title, route, defaultSize, resizable, currentSize, currentPosition }) => ({
+    id,
+    title,
+    route,
+    defaultSize,
+    resizable,
+    currentSize,
+    currentPosition
+  }));
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('openWindows', JSON.stringify(persistable));
+  }
+});

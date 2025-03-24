@@ -6,6 +6,7 @@
     import MenuBar from '$lib/components/MenuBar.svelte';
     import WindowManager from '$lib/components/WindowManager.svelte';
     import SoundEffects from '$lib/components/SoundEffects.svelte';
+    import  WindowEntry  from '$lib/components/WindowManager.svelte';
 
     import { browser } from '$app/environment';
     import { page } from '$app/stores';

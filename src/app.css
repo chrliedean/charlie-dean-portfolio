@@ -71,6 +71,7 @@
     position: static;
     inset: 0%;
     user-select: none;
+    -webkit-user-select: none;
   }
   
   .window-title {
@@ -414,6 +415,7 @@
     padding: 0 6px;
     font-family: Charcoal, Tahoma, sans-serif;
     user-select: none;
+    -webkit-user-select: none;
     -webkit-user-drag: none;
   }
   
@@ -427,6 +429,8 @@
   }
   
   .menubar {
+    user-select: none;
+    -webkit-user-select: none;
     grid-column-gap: 0px;
     grid-row-gap: 0px;
     background-color: var(--_colors---grays-300);
@@ -559,7 +563,7 @@
     left: 0;
   }
   
-  .dropdown-menu.w--open {
+  .dropdown-menu {
     border: var(--line-width) solid var(--_colors---primary-black-900);
     background-color: var(--_colors---grays-300);
     box-shadow: var(--line-width) var(--line-width) 0 0 var(--_colors---primary-black-900), inset var(--negative-line-width) var(--negative-line-width) 0 0 var(--_colors---grays-600), inset var(--line-width) var(--line-width) 0 0 var(--primary-white-100);

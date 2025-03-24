@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
   import { writable } from 'svelte/store';
-  export type SoundCommand = 'drag-start' | 'drag-end' | 'wcol' | 'wexp';
+  export type SoundCommand = 'drag-start' | 'drag-end' | 'wcol' | 'wexp' | 'mnuo' | 'mnuc';
   export const soundCommand = writable<SoundCommand | null>(null);
 </script>
 
@@ -11,6 +11,7 @@
   const buffers: Record<string, AudioBuffer> = {};
   const sources: Record<string, AudioBufferSourceNode | null> = { drag: null };
   const gains: Record<string, GainNode> = {};
+  let suppressMouseUp = false;
 
   async function load(name: string, url: string, volume = 0.5) {
     const resp = await fetch(url);
@@ -41,7 +42,16 @@
 
   onMount(() => {
     audioCtx = new AudioContext({ latencyHint: 'interactive' });
-    window.addEventListener('mousedown', () => audioCtx.state === 'suspended' && audioCtx.resume(), { once: true });
+
+    // Ensure the AudioContext is resumed on user interaction
+    const resumeAudioContext = () => {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    };
+
+    window.addEventListener('mousedown', resumeAudioContext, { once: true });
+    window.addEventListener('touchstart', resumeAudioContext, { once: true });
 
     (async () => {
       await Promise.all([
@@ -51,11 +61,14 @@
         load('end', '/media/delay.mp3', 0.4),
         load('wcol', '/media/wcol.mp3', 0.4), 
         load('wexp', '/media/wexp.mp3', 0.4),
+        load('mnuo', '/media/mnuo.mp3', 0.4),
+        load('mnuc', '/media/mnuc.mp3', 0.4),
       ]);
     })();
 
     const unsubscribe = soundCommand.subscribe(cmd => {
       if (!cmd) return;
+      suppressMouseUp = true;
       if (cmd === 'drag-start') play('drag', true);
       if (cmd === 'drag-end') {
         stop('drag');
@@ -63,6 +76,8 @@
       }
       if (cmd === 'wcol') play('wcol');
       if (cmd === 'wexp') play('wexp');
+      if (cmd === 'mnuo') play('mnuo');
+      if (cmd === 'mnuc') play('mnuc');
       soundCommand.set(null);
     });
 
@@ -70,7 +85,12 @@
   });
 
   function handleMouseDown() { play('down'); }
-  function handleMouseUp() { play('up'); }
+  function handleMouseUp() {
+    if (!suppressMouseUp) {
+      play('up');
+    }
+    suppressMouseUp = false;
+  }
 </script>
 
 <svelte:window on:mousedown={handleMouseDown} on:mouseup={handleMouseUp} />

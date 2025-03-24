@@ -1101,7 +1101,6 @@ textarea.w-select {
 .w-dropdown-list {
   position: absolute;
   background: #dddddd;
-  display: none;
   min-width: 100%;
 }
 .w-dropdown-list.w--open {

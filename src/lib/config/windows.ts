@@ -2,22 +2,12 @@ import AboutPage from '../../routes/about/+page.svelte';
 import HomePage from '../../routes/+page.svelte';
 import ContactPage from '../../routes/contact/+page.svelte';
 
-export interface WindowEntry {
-  id: string;
-  title: string;
-  component: any;
-  route: string;
-  ref?: any; // later you can type this more specifically
-  resizable?: boolean;
-  defHeight?: number;
-  defWidth?: number;
-  defaultSize? : { width: number, height: number },
-}
+import type { WindowEntry }  from '../types/WindowEntry.ts';
 
 export const windowConfig: Record<string, WindowEntry> = {
   '/about': {
     id: 'about',
-    title: 'About',
+    title: '📔 About',
     component: AboutPage,
     route: '/about',
   },
@@ -30,7 +20,7 @@ export const windowConfig: Record<string, WindowEntry> = {
   },
   '/contact': {
     id: 'contact',
-    title: 'Contact',
+    title: '📧 Contact',
     component: ContactPage,
     route: '/contact',
     resizable: false,
