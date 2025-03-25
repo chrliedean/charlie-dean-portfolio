@@ -2,8 +2,8 @@
     import { goto } from '$app/navigation';
     import { windowConfig } from '$lib/config/windows';
     
-    export let href: string;
-    export let classname: string = '';
+    
+    let {href, classname, children} = $props();
     
     function handleClick(e: MouseEvent) {
       e.preventDefault();
@@ -31,6 +31,6 @@
     }
   </script>
   
-  <a href={href} on:click={handleClick} class={classname}>
-    <slot />
+  <a href={href} onclick={handleClick} class={classname}>
+    {@render children?.()}
   </a>
