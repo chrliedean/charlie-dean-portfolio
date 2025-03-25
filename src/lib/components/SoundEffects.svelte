@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
   import { writable } from 'svelte/store';
-  export type SoundCommand = 'drag-start' | 'drag-end' | 'wcol' | 'wexp' | 'mnuo' | 'mnuc' | 'mnui';
+  export type SoundCommand = 'stopall' |'drag-start' | 'drag-end' | 'wcol' | 'wexp' | 'mnuo' | 'mnuc' | 'mnui';
   export const soundCommand = writable<SoundCommand | null>(null);
 </script>
 
@@ -80,13 +80,18 @@
       if (cmd === 'mnuo') play('mnuo');
       if (cmd === 'mnuc') play('mnuc');
       if (cmd === 'mnui') play('mnui');
+      if (cmd === 'stopall') {
+        for (const src of Object.values(sources)) {
+          if (src) src.stop();
+        }
+      }
       soundCommand.set(null);
     });
 
     return unsubscribe;
   });
 
-  function handleMouseDown() { play('down'); }
+  function handleMouseDown() { play('down');  }
   function handleMouseUp() {
     if (!suppressMouseUp) {
       play('up');

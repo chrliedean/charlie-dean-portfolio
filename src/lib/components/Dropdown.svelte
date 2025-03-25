@@ -47,8 +47,8 @@
     }
   </script>
   
-  <div bind:this={container} class={className}>
-    <div onclick={toggleMenu} role="button" aria-expanded={isOpen} tabindex="0">
+  <div bind:this={container} class={className} class:open={isOpen}>
+    <div onclick={toggleMenu} role="button" aria-expanded={isOpen} tabindex="0" style="display: flex;">
       <slot name="toggle">Toggle</slot>
     </div>
   

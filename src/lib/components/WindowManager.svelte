@@ -161,6 +161,7 @@
 		bind:this={win.ref}
 		minHeight={150}
 		minWidth={300}
+		icon={win.icon}
 		
 	>
 	<svelte:component this={win.component} />

@@ -1,3 +1,4 @@
+import Icon from '$lib/components/Icon.svelte';
 export interface WindowEntry {
     id: string;
     title: string;
@@ -9,4 +10,5 @@ export interface WindowEntry {
     currentSize?: { width: number; height: number };
     currentPosition?: { x: number; y: number };
     style?: string;
+    icon?: string;
   }

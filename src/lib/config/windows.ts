@@ -2,8 +2,10 @@ import AboutPage from '../../routes/about/+page.svelte';
 import HomePage from '../../routes/+page.svelte';
 import ContactPage from '../../routes/contact/+page.svelte';
 import EnterPassword from '../../routes/enter-password/+page.svelte';
+import PortfolioPage from '../../routes/portfolio/+page.svelte';
+import ShaveYourTonguePage from '../../routes/portfolio/shave-your-tongue/+page.svelte';
 
-import type { WindowEntry }  from '../types/WindowEntry.ts';
+import type { WindowEntry } from '../types/WindowEntry.ts';
 
 export const windowConfig: Record<string, WindowEntry> = {
   '/about': {
@@ -33,7 +35,19 @@ export const windowConfig: Record<string, WindowEntry> = {
     component: EnterPassword,
     route: '/enter-password',
     resizable: false,
-    defaultSize: { width: 400, height: 150 },
     style: 'alert'
+  },
+  '/portfolio': {
+    id: 'portfolio',
+    title: 'Portfolio',
+    component: PortfolioPage,
+    route: '/portfolio',
+    icon: 'folder',
+  },
+  '/portfolio/shave-your-tongue': {
+    id: 'portfolio/shave-your-tongue',
+    title: 'Shave Your Tongue',
+    component: ShaveYourTonguePage,
+    route: '/portfolio/shave-your-tongue',
   }
 };

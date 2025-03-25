@@ -489,8 +489,8 @@
   }
   
   .menubar-item {
-    box-sizing: border-box;
     color: var(--_colors---primary-black-900);
+    box-sizing: border-box;
     flex-flow: row;
     flex: 0 auto;
     order: 0;
@@ -503,10 +503,18 @@
     text-decoration: none;
     display: flex;
   }
+
+
   
+
   .menubar-item:active {
     background-color: var(--_colors---azul);
     color: var(--primary-white-100);
+  }
+
+  .menubar-item.open {
+    background-color: var(--_colors---azul);
+    color: var(--primary-white) !important;
   }
   
   .menubar-item.logo {
@@ -526,6 +534,10 @@
   }
   
   .menubar-item.logo:active {
+    background-image: url('/img/square-logo-cd-active.png');
+  }
+
+  .menubar-item.logo.open {
     background-image: url('/img/square-logo-cd-active.png');
   }
   
@@ -597,6 +609,8 @@
   .dropdown-toggle {
     align-self: center;
     padding: 0;
+    display: flex;
+    justify-content: center;
   }
   
   .dropdown-menu {
@@ -642,6 +656,11 @@
     padding-right: 5px;
     font-size: 10px;
     font-style: normal;
+  }
+
+  .video {
+    width: 100%;
+    height: 100%;;
   }
   
   @media screen and (max-width: 767px) {

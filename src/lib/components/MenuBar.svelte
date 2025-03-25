@@ -4,6 +4,7 @@
     import { focusedWindow } from '$lib/stores/windows';
     import { openWindows } from '$lib/stores/windows';
     import Dropdown from './Dropdown.svelte';
+    import Icon from './Icon.svelte';
 
     let time = $state('');
 
@@ -44,7 +45,7 @@
             </nav>
            
         </Dropdown>
-        <SmartLink href="/" classname="menubar-item w-inline-block">
+        <SmartLink href="/portfolio" classname="menubar-item w-inline-block">
             <div class="menubar-item-contents">Portfolio</div>
         </SmartLink>
         <a href="#" class="menubar-item w-inline-block">
@@ -66,13 +67,27 @@
         </div>
 
         <Dropdown className="menubar-item w-dropdown">
-            <div class="menubar-item w-dropdown" slot="toggle">
-                <div class="menubar-item-contents dropdown-toggle">{ $focusedWindow ? $focusedWindow.title : 'Default Title' }</div>
+            <div class= "dropdown-toggle w-dropdown-toggle" slot="toggle">
+                <div class="menubar-item-contents">
+                    {#if $focusedWindow}
+                        {#if $focusedWindow.icon}
+                            <Icon name={$focusedWindow.icon} size="1em" />
+                        {/if}
+                        {$focusedWindow.title}
+                    {:else}
+                        Default Title
+                    {/if}
+                </div>
             </div>
           
             <nav class="dropdown-menu w-dropdown-list">
                 {#each $openWindows as win (win.id)}
-                     <SmartLink href={win.route} classname="dropdown-link w-dropdown-link">{win.title}</SmartLink>
+                     <SmartLink href={win.route} classname="dropdown-link w-dropdown-link">
+                        {#if win.icon}
+                            <Icon name={win.icon} size="1em" />
+                        {/if}
+                        {win.title}
+                    </SmartLink>
                 {/each}
             </nav>
           

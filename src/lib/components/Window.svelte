@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { soundCommand } from './SoundEffects.svelte';
 	import { getContext, setContext } from 'svelte';
+	import  Icon  from './Icon.svelte';
 
 	export let id: string;
 	export let title = '';
@@ -14,6 +15,8 @@
 	export let minHeight: number;
 	export let minWidth: number;
 	export let resizable = true;
+	export let icon = '';
+	
   export let style = '';
 	// New exported props for persisted size/position.
 	export let currentSize: { width: number; height: number } | null = null;
@@ -160,6 +163,7 @@
 		};
 		window.addEventListener('mousemove', handleResizing);
 		window.addEventListener('mouseup', handleResizeMouseUp);
+		soundCommand.set('drag-start');
 	}
 
 	function handleResizing(event: MouseEvent) {
@@ -177,6 +181,7 @@
 		window.removeEventListener('mousemove', handleResizing);
 		window.removeEventListener('mouseup', handleResizeMouseUp);
 		updateWindowState();
+		soundCommand.set('drag-end');
 	}
 
 	// Update currentSize and currentPosition and dispatch an event.
@@ -200,14 +205,6 @@
 			goto(route);
 		}
 	}
-
-	// export function closeWindow(event: Event) {
-	// 	event.preventDefault();
-	// 	event.stopPropagation();
-	// 	dispatch('close', { id });
-	// 	console.log('closing window:', id);
-	// }
-
 
 	let minimized = false;
 	function minimizeWindow(event: MouseEvent) {
@@ -235,12 +232,13 @@
 		closeWindow(id);
 		console.log('closing window:', id);
 	}
+	setContext('windowId', id);
 </script>
 
 <div bind:this={windowEl} class="window {style}" class:resizable={resizable} role="presentation">
-	<div class="titlebar" on:mousedown={handleTitleMouseDown} on:click={handleTitleClick} role="presentation">
+	<div class="titlebar" onmousedown={handleTitleMouseDown} onclick={handleTitleClick} role="presentation">
 		<div class="w-layout-hflex title-bar-flexbox">
-			<div class="titlebar-button" on:click={closeWindowButton} role="presentation"></div>
+			<div class="titlebar-button" onclick={closeWindowButton} role="presentation"></div>
 			<div class="window-stripes">
 				<div class="horizontal-window-stripe"></div>
 				<div class="horizontal-window-stripe"></div>
@@ -249,7 +247,12 @@
 				<div class="horizontal-window-stripe"></div>
 				<div class="horizontal-window-stripe"></div>
 			</div>
-			<h1 class="window-title">{title}</h1>
+			<h1 class="window-title">
+				{#if icon}
+					<Icon name={icon} size="1em" />
+				{/if}
+				{title}
+			</h1>
 			<div class="window-stripes">
 				<div class="horizontal-window-stripe"></div>
 				<div class="horizontal-window-stripe"></div>
@@ -261,13 +264,13 @@
 			<div class="titlebar-button zoom-parent">
 				<div class="titlebar-button-zoom"></div>
 			</div>
-			<div class="titlebar-button" on:click={minimizeWindow} role="presentation">
+			<div class="titlebar-button" onclick={minimizeWindow} role="presentation">
 				<div class="titlebar-button-minimize"></div>
 			</div>
 		</div>
 	</div>
 	<div class="window-body" role="presentation">
-		<slot id={id} closeWindow={closeWindow}/>
+		<slot {id}/>
 	</div>
-	<div class="resize-handle" on:mousedown={handleResizeMouseDown} role="presentation"></div>
+	<div class="resize-handle" onmousedown={handleResizeMouseDown} role="presentation"></div>
 </div>
