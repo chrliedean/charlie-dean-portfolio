@@ -126,7 +126,8 @@
           ...baseConfig,
           id: route, // Use full route as ID for uniqueness
           route: route,
-          title: currentPageData?.meta?.title || `Loading ${postId}...`
+          title: currentPageData?.meta?.title || `Loading ${postId}...`,
+          icon: currentPageData?.meta?.icon || 'folder',
         };
       } else {
         console.error(`❌ No base config found for dynamic route at /portfolio/[id]`);

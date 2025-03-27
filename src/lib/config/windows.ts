@@ -2,7 +2,7 @@ interface WindowMeta {
   id: string;
   title: string;
   route: string;
-  // any other properties
+  icon: string;
 }
 
 export default interface WindowEntry extends WindowMeta {

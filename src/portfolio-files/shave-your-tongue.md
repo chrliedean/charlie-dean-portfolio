@@ -1,5 +1,5 @@
 ---
-title: Shave your Tongue
+title: Shave Your Tongue
 id: shave-your-tongue
 route: /portfolio/shave-your-tongue
 icon: movie
