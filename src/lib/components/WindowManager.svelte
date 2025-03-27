@@ -93,7 +93,9 @@
   // -------------------------------
   // Handle route changes from $page
   // -------------------------------
-  async function handleRouteChange(route: string) {
+
+
+async function handleRouteChange(route: string) {
   route = normalizeRoute(route);
   let baseConfig = windowConfig[route];
   
@@ -103,16 +105,17 @@
       // Use the base config for dynamic posts
       baseConfig = windowConfig['/portfolio/[id]'];
       
+      // For dynamic routes, we'll need to create a unique ID
+      // and update the title later when content loads
+      const postId = route.split('/').pop();
+      
       if (baseConfig) {
-        const postId = route.split('/').pop();
-        
         // Create a copy of the base config with a unique ID
         baseConfig = {
           ...baseConfig,
           id: route, // Use full route as ID for uniqueness
           route: route,
-          title: `Loading ${postId}...`, // Temporary title until content loads
-          data: { loading: true }
+          title: `Loading ${postId}...` // Temporary title until data loads
         };
       }
     } else {
@@ -121,15 +124,28 @@
     }
   }
   
-  // Rest of your handleRouteChange function follows...
-  // This includes updating openWindows, focusing the window, etc.
+  // Attempt to load page data for this route if it's a standard SvelteKit route
+  let pageData = null;
+  try {
+    // This won't work for client-side navigation, but we can use it as a fallback
+    if (route === '/portfolio') {
+      const response = await fetch('/api/portfolio-files');
+      if (response.ok) {
+        const posts = await response.json();
+        pageData = { posts };
+        console.log("Loaded portfolio data:", pageData);
+      }
+    }
+  } catch (error) {
+    console.error("Error loading page data:", error);
+  }
   
   openWindows.update((windows) => {
+    // For dynamic post routes, ensure uniqueness by using the full route as the window id
     const windowId = route;
     const existing = windows.find((w) => w.id === windowId);
-    
     if (existing) {
-      // Bring existing window to the top if it's not already focused
+      // Bring existing window to the top if it's not already focused.
       if (get(focusedWindow)?.id !== existing.id) {
         const others = windows.filter((w) => w.id !== windowId);
         windows = [...others, existing];
@@ -137,24 +153,23 @@
         updateDocumentTitle(existing.id);
       }
     } else {
-      // Create a new window entry using the base config
+      // Create a new window entry using the dynamic post base config
       const newWindow: WindowEntry = {
         ...baseConfig,
         id: windowId,
-        route: windowId,
+        route: windowId, // unique dynamic route
         ref: null,
         xyorigin: lastOrigin || undefined,
+        data: pageData, // Use the loaded data if available
       };
-      
       windows = [...windows, newWindow];
       focusedWindow.set(newWindow);
       updateDocumentTitle(newWindow.id);
       lastOrigin = null;
     }
-    
     return windows;
   });
-  
+
   await tick();
   const win = get(openWindows).find((w) => normalizeRoute(w.route) === route);
   if (win && win.ref && typeof win.ref.focus === "function") {

@@ -14,7 +14,7 @@ async function getPosts() {
   try {
     // This approach uses a slightly different import.meta.glob pattern
     // which might help if there's a path resolution issue
-    const paths = import.meta.glob('../../portfolio-files/*.md', { eager: true });
+    const paths = import.meta.glob('/src/portfolio-files/*.md', { eager: true });
     console.log('API: Found paths:', Object.keys(paths));
     
     for (const path in paths) {
@@ -52,7 +52,7 @@ async function getPosts() {
     posts.push({
       id: 'fallback-post',
       title: 'Fallback Post',
-      date: new Date().toISOString(),
+      date: '1970-01-01',
       medium: 'Testing',
       route: '/portfolio/fallback-post',
       published: true,
