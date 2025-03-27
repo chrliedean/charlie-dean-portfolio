@@ -404,7 +404,7 @@
     </div>
   </div>
   <div class="window-body" role="presentation">
-    <slot {...$$restProps} {id} />
+    <slot data={$$props.data} {id} />
   </div>
   <div
     class="resize-handle"

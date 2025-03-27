@@ -2,24 +2,33 @@
     import { onMount } from 'svelte';
     import { formatDate } from '$lib/utils.js';
     import { updateWindow } from '$lib/stores/windows';
+    import { page } from '$app/stores';
     
+    // Accept data from both props and the page store
     export let data;
     
-    // Log the data as soon as it's received to see what we're getting
-    console.log("Initial data in portfolio post component:", data);
+    // Use SvelteKit's page store as a fallback
+    $: pageData = data || $page.data;
+    
+    console.log("Portfolio post component data sources:", {
+      propData: data ? 'Present' : 'Missing',
+      pageStoreData: $page.data ? 'Present' : 'Missing'
+    });
     
     onMount(() => {
-      console.log("Portfolio post component mounted with data:", data);
+      console.log("Portfolio post component mounted with data:", pageData);
       
-      if (data && data.meta) {
+      if (pageData && pageData.meta) {
         // Update the window with dynamic metadata
         updateWindow(window.location.pathname, {
-          title: data.meta.title || 'Portfolio Post',
-          icon: data.meta.icon || 'document', 
+          title: pageData.meta.title || 'Portfolio Post',
+          icon: pageData.meta.icon || 'document',
+          // Also update the data property so it's available if the window is reused
+          data: pageData
         });
-        console.log("Window updated with title:", data.meta.title);
+        console.log("Window updated with title:", pageData.meta.title);
       } else {
-        console.error("Post data is missing or incomplete:", data);
+        console.error("Post data is missing or incomplete:", pageData);
       }
     });
   </script>
@@ -27,7 +36,7 @@
   <script context="module">
     export const windowMeta = {
       id: 'portfolio-post',
-      title: 'Portfolio Post', // This will be updated dynamically after load
+      title: 'Portfolio Post',
       route: '/portfolio/[id]',
       defaultSize: { width: 600, height: 400 },
       icon: 'folder'
@@ -35,37 +44,31 @@
   </script>
   
   <svelte:head>
-    <title>{data?.meta?.title || 'Portfolio Post'}</title>
+    <title>{pageData?.meta?.title || 'Portfolio Post'}</title>
     <meta property="og:type" content="article" />
-    <meta property="og:title" content={data?.meta?.title || 'Portfolio Post'} />
+    <meta property="og:title" content={pageData?.meta?.title || 'Portfolio Post'} />
   </svelte:head>
   
-  <!-- Debug info to help troubleshoot -->
-  <div style="background: #f5f5f5; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; display: none;">
-    <p>Debug info:</p>
-    <pre>{JSON.stringify(data, null, 2)}</pre>
-  </div>
-  
-  {#if data && data.meta}
+  {#if pageData && pageData.meta}
     <article>
       <hgroup>
-        <h1>{data.meta.title || 'No title'}</h1>
-        <p>Published at {data.meta.date ? formatDate(data.meta.date) : 'Unknown'}</p>
+        <h1>{pageData.meta.title || 'No title'}</h1>
+        <p>Published at {pageData.meta.date ? formatDate(pageData.meta.date) : 'Unknown'}</p>
       </hgroup>
       
-      {#if data.meta.categories && data.meta.categories.length > 0}
+      {#if pageData.meta.categories && pageData.meta.categories.length > 0}
         <div class="tags">
-          {#each data.meta.categories as category}
+          {#each pageData.meta.categories as category}
             <span class="surface-4">&num;{category}</span>
           {/each}
         </div>
       {/if}
       
-      <p class="medium">{data.meta.medium || ''}</p>
+      <p class="medium">{pageData.meta.medium || ''}</p>
       
       <div class="prose">
-        {#if data.content}
-          <svelte:component this={data.content} />
+        {#if pageData.content}
+          <svelte:component this={pageData.content} />
         {:else}
           <p>Content not available - data.content is missing</p>
         {/if}
@@ -73,6 +76,6 @@
     </article>
   {:else}
     <div class="loading">
-      <p>Loading post... (If this persists, there might be an issue loading the data)</p>
+      <p>Loading post... (If this persists, there might be an issue with data flow)</p>
     </div>
   {/if}

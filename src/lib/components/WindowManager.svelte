@@ -99,6 +99,10 @@
   route = normalizeRoute(route);
   console.log(`🔄 Handling route change to: ${route}`);
   
+  // Get current page data from the SvelteKit store
+  const currentPageData = get(page).data;
+  console.log("Current page data from SvelteKit:", currentPageData);
+  
   let baseConfig = windowConfig[route];
   console.log(`Found baseConfig for route ${route}:`, baseConfig ? 'Yes' : 'No');
   
@@ -111,8 +115,6 @@
       baseConfig = windowConfig['/portfolio/[id]'];
       console.log(`Found dynamic route config:`, baseConfig ? 'Yes' : 'No');
       
-      // For dynamic routes, we'll need to create a unique ID
-      // and update the title later when content loads
       const postId = route.split('/').pop();
       console.log(`Post ID: ${postId}`);
       
@@ -124,11 +126,10 @@
           ...baseConfig,
           id: route, // Use full route as ID for uniqueness
           route: route,
-          title: `Loading ${postId}...` // Temporary title until data loads
+          title: currentPageData?.meta?.title || `Loading ${postId}...`
         };
       } else {
         console.error(`❌ No base config found for dynamic route at /portfolio/[id]`);
-        console.log(`Available routes in windowConfig:`, Object.keys(windowConfig));
         return;
       }
     } else {
@@ -138,14 +139,18 @@
   }
   
   openWindows.update((windows) => {
-    // For dynamic post routes, ensure uniqueness by using the full route as the window id
     const windowId = route;
     const existing = windows.find((w) => w.id === windowId);
     
     if (existing) {
       console.log(`🔍 Found existing window for ${route}, bringing to front`);
-      // Bring existing window to the top if it's not already focused.
       if (get(focusedWindow)?.id !== existing.id) {
+        // If we have new data, update the existing window
+        if (currentPageData && Object.keys(currentPageData).length > 0) {
+          console.log("Updating existing window with new data:", currentPageData);
+          existing.data = currentPageData;
+        }
+        
         const others = windows.filter((w) => w.id !== windowId);
         windows = [...others, existing];
         focusedWindow.set(existing);
@@ -153,16 +158,21 @@
       }
     } else {
       console.log(`🆕 Creating new window for route ${route}`);
-      // Create a new window entry using the dynamic post base config
+      
+      // Create a new window with the current page data
       const newWindow: WindowEntry = {
         ...baseConfig,
         id: windowId,
-        route: windowId, // unique dynamic route
+        route: windowId,
         ref: null,
         xyorigin: lastOrigin || undefined,
-        data, // data will be fetched on mount if needed
+        data: currentPageData // Set the SvelteKit page data here
       };
-      console.log(`New window config:`, newWindow);
+      
+      console.log(`New window config with data:`, {
+        ...newWindow,
+        data: currentPageData ? 'Data exists' : 'No data'
+      });
       
       windows = [...windows, newWindow];
       focusedWindow.set(newWindow);
@@ -177,8 +187,6 @@
   if (win && win.ref && typeof win.ref.focus === "function") {
     console.log(`Focusing window for ${route}`);
     win.ref.focus();
-  } else {
-    console.log(`Cannot focus window - missing ref or focus method`, win);
   }
 }
 
