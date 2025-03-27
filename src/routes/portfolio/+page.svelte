@@ -1,6 +1,5 @@
-<!-- /portfolio/page.svelte-->
-<script module>
-    export const windowMeta= {
+<script context="module">
+  export const windowMeta = {
     id: 'portfolio',
     title: 'Portfolio',
     route: '/portfolio',
@@ -8,57 +7,37 @@
     icon: 'folder'
   };
 </script>
+
 <script lang="ts">
-  import { onMount } from "svelte";
   import SmartLink from "$lib/components/SmartLink.svelte";
   import { formatDate } from "$lib/utils";
-  import { portfolioStore } from "$lib/stores/portfolioStore";
-  import { get } from "svelte/store";
-
-  interface PortfolioData {
-    posts: any[]; // or use a more specific type if available
-  }
-
-  // When loaded normally, SvelteKit injects load data as the 'data' prop.
-  export let data: PortfolioData | null = null;
-
-  // We'll capture the data once in finalData.
-  let finalData: PortfolioData;
-
-  onMount(async () => {
-  if (data && data.posts && data.posts.length) {
-    finalData = data;
-    portfolioStore.set(finalData);
-  } else {
-    try {
-      const res = await fetch('/api/portfolio-files');
-      if (res.ok) {
-        const posts = await res.json();
-        finalData = { posts };
-        portfolioStore.set(finalData);
-      } else {
-        console.error("Failed to fetch posts from API, status:", res.status);
-        finalData = { posts: [] };
-      }
-    } catch (error) {
-      console.error("Error fetching posts from API:", error);
-      finalData = { posts: [] };
-    }
-  }
-  console.log("Portfolio page finalData onMount:", finalData);
-});
+  import Icon from "$lib/components/Icon.svelte";
+  
+  export let data;
 </script>
 
+<svelte:head>
+  <title>Charlie Dean - Portfolio</title>
+  <meta name="description" content="Portfolio of Charlie Dean's work" />
+</svelte:head>
+
 <section>
+  <h2>Portfolio</h2>
+  
   <ul class="posts">
-    {#each finalData?.posts ?? [] as post}
-      <li class="post">
-        <a href={post.route} class="title">{post.title}</a>
-        <p class="date">{formatDate(post.date ?? '')}</p>
-        <p class="description">{post.medium}</p>
-      </li>
-    {/each}
+    {#if data.posts && data.posts.length > 0}
+      {#each data.posts as post}
+        <li class="post">
+          <SmartLink href={post.route} classname="post-link">
+            {#if post.icon}<Icon name={post.icon} size="16px" />{/if}
+            <span class="title">{post.title}</span>
+          </SmartLink>
+          <p class="date">{formatDate(post.date ?? '')}</p>
+          <p class="description">{post.medium ?? ''}</p>
+        </li>
+      {/each}
+    {:else}
+      <li>No portfolio items found.</li>
+    {/if}
   </ul>
 </section>
-
-<SmartLink href="/portfolio/shave-your-tongue">shave-your-tongue</SmartLink>

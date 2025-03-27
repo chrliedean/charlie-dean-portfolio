@@ -8,6 +8,7 @@ interface WindowMeta {
 export default interface WindowEntry extends WindowMeta {
   route: string;
   component: any;
+  data?: any;
 }
 
 const modules = import.meta.glob('/src/routes/**/+page.svelte', { eager: true }) as Record<string, any>;

@@ -94,70 +94,73 @@
   // Handle route changes from $page
   // -------------------------------
   async function handleRouteChange(route: string) {
-    route = normalizeRoute(route);
-    let baseConfig = windowConfig[route];
-    
-    // If no static config is found, check if it's a dynamic post route
-    if (!baseConfig) {
-      if (route.startsWith('/portfolio/') && route !== '/portfolio') {
-        // Use the base config for dynamic posts
-        baseConfig = windowConfig['/portfolio/[id]'];
-        
-        // For dynamic routes, we'll need to create a unique ID
-        // and update the title later when content loads
+  route = normalizeRoute(route);
+  let baseConfig = windowConfig[route];
+  
+  // If no static config is found, check if it's a dynamic post route
+  if (!baseConfig) {
+    if (route.startsWith('/portfolio/') && route !== '/portfolio') {
+      // Use the base config for dynamic posts
+      baseConfig = windowConfig['/portfolio/[id]'];
+      
+      if (baseConfig) {
         const postId = route.split('/').pop();
         
-        if (baseConfig) {
-          // Create a copy of the base config with a unique ID
-          baseConfig = {
-            ...baseConfig,
-            id: route, // Use full route as ID for uniqueness
-            route: route,
-            title: `Loading ${postId}...` // Temporary title until data loads
-          };
-        }
-      } else {
-        console.log("404 - no page for route:", route);
-        return;
-      }
-  }
-    
-    openWindows.update((windows) => {
-      // For dynamic post routes, ensure uniqueness by using the full route as the window id
-      const windowId = route;
-      const existing = windows.find((w) => w.id === windowId);
-      if (existing) {
-        // Bring existing window to the top if it's not already focused.
-        if (get(focusedWindow)?.id !== existing.id) {
-          const others = windows.filter((w) => w.id !== windowId);
-          windows = [...others, existing];
-          focusedWindow.set(existing);
-          updateDocumentTitle(existing.id);
-        }
-      } else {
-        // Create a new window entry using the dynamic post base config
-        const newWindow: WindowEntry = {
+        // Create a copy of the base config with a unique ID
+        baseConfig = {
           ...baseConfig,
-          id: windowId,
-          route: windowId, // unique dynamic route
-          ref: null,
-          xyorigin: lastOrigin || undefined,
-          data, // data will be fetched on mount if needed
+          id: route, // Use full route as ID for uniqueness
+          route: route,
+          title: `Loading ${postId}...`, // Temporary title until content loads
+          data: { loading: true }
         };
-        windows = [...windows, newWindow];
-        focusedWindow.set(newWindow);
-        updateDocumentTitle(newWindow.id);
-        lastOrigin = null;
       }
-      return windows;
-    });
-    
-    await tick();
-    const win = get(openWindows).find((w) => normalizeRoute(w.route) === route);
-    if (win && win.ref && typeof win.ref.focus === "function") {
-      win.ref.focus();
+    } else {
+      console.log("404 - no page for route:", route);
+      return;
     }
   }
+  
+  // Rest of your handleRouteChange function follows...
+  // This includes updating openWindows, focusing the window, etc.
+  
+  openWindows.update((windows) => {
+    const windowId = route;
+    const existing = windows.find((w) => w.id === windowId);
+    
+    if (existing) {
+      // Bring existing window to the top if it's not already focused
+      if (get(focusedWindow)?.id !== existing.id) {
+        const others = windows.filter((w) => w.id !== windowId);
+        windows = [...others, existing];
+        focusedWindow.set(existing);
+        updateDocumentTitle(existing.id);
+      }
+    } else {
+      // Create a new window entry using the base config
+      const newWindow: WindowEntry = {
+        ...baseConfig,
+        id: windowId,
+        route: windowId,
+        ref: null,
+        xyorigin: lastOrigin || undefined,
+      };
+      
+      windows = [...windows, newWindow];
+      focusedWindow.set(newWindow);
+      updateDocumentTitle(newWindow.id);
+      lastOrigin = null;
+    }
+    
+    return windows;
+  });
+  
+  await tick();
+  const win = get(openWindows).find((w) => normalizeRoute(w.route) === route);
+  if (win && win.ref && typeof win.ref.focus === "function") {
+    win.ref.focus();
+  }
+}
 
   // Subscribe to $page changes so that when the URL changes, we open/focus the corresponding window.
   onMount(() => {
