@@ -1,170 +1,246 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import Window from './Window.svelte';
-	import { windowConfig } from '../config/windows';
-	import type { WindowEntry } from '$lib/types/WindowEntry';
-	import { openWindows, focusedWindow, updateWindow } from '$lib/stores/windows';
-	import { get } from 'svelte/store';
-	import { setContext } from 'svelte';
+  import { onMount, tick, setContext } from "svelte";
+  import { page } from "$app/stores";
+  import { get } from "svelte/store";
+  import Window from "./Window.svelte";
+  import type { WindowEntry } from "$lib/types/WindowEntry";
+  import {
+    openWindows,
+    focusedWindow,
+    updateWindow,
+  } from "$lib/stores/windows";
+  import { windowConfig } from "$lib/config/windows";
+  import { goto } from "$app/navigation";
+  let data = windowConfig.data;
 
-	// Load saved state from localStorage
-	let savedState: any[] = [];
-	if (typeof localStorage !== 'undefined') {
-		const saved = localStorage.getItem('openWindows');
-		if (saved) {
-			try {
-				savedState = JSON.parse(saved);
-			} catch (e) {
-				savedState = [];
-			}
-		}
-	}
+  // Global variable to record last left-click coordinates.
+  let lastOrigin: { x: number; y: number } | null = null;
 
-	// Merge saved state with windowConfig to restore missing props (like component)
-	let mergedWindows: WindowEntry[] = savedState.map((saved) => {
-		const config = windowConfig[saved.route];
-		return config ? { ...config, ...saved, ref: null } : saved;
-	});
+  // Record left-click coordinates whenever the user clicks.
+  function recordOrigin(event: MouseEvent) {
+    if (event.button === 0) {
+      // only for left clicks
+      lastOrigin = { x: event.clientX, y: event.clientY };
+    }
+  }
 
-	const currentRoute = $page.url.pathname;
-	// If current route isn’t in the saved state, add it from default config
-	if (!mergedWindows.some((win) => win.route === currentRoute) && windowConfig[currentRoute]) {
-		mergedWindows.push({ ...windowConfig[currentRoute], ref: null });
-	}
+  onMount(() => {
+    window.addEventListener("mousedown", recordOrigin);
+    return () => {
+      window.removeEventListener("mousedown", recordOrigin);
+    };
+  });
 
-	openWindows.set(mergedWindows);
+  // -------------------------------
+  // Helper: Load saved window state from localStorage
+  // -------------------------------
+  function loadSavedState(): any[] {
+    if (typeof localStorage !== "undefined") {
+      const saved = localStorage.getItem("openWindows");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (error) {
+          console.error("Error parsing saved windows state", error);
+        }
+      }
+    }
+    return [];
+  }
 
-	// Bring a window to the front based on its route.
-	const focusWindowForRoute = (route: string) => {
-		openWindows.update((windows) => {
-			const targetIndex = windows.findIndex((win) => win.route === route);
-			if (targetIndex > -1) {
-				// Move the target to the end so it appears on top.
-				const [target] = windows.splice(targetIndex, 1);
-				windows.push(target);
-				focusedWindow.set(target);
-				goto(target.route);
-			}
-			return windows;
-		});
-	};
+  //-------------------------
+  // Helper: Normalize route
+  //-------------------------
+  function normalizeRoute(route: string): string {
+    return route
+  }
 
-	onMount(() => {
-		focusWindowForRoute(currentRoute);
-	});
+  // -------------------------------
+  // Merge dynamic config with saved state
+  // -------------------------------
+  const savedState: any[] = loadSavedState();
+  let mergedWindows: WindowEntry[] = savedState
+    .filter((saved) => {
+      const normRoute = normalizeRoute(saved.route);
+      // Skip dynamic post windows (e.g. /portfolio/some-post) so they are not loaded from localStorage
+      if (normRoute.startsWith('/portfolio/') && normRoute !== '/portfolio') {
+        return false;
+      }
+      return windowConfig[normRoute] !== undefined;
+    })
+    .map((saved) => {
+      const config = windowConfig[normalizeRoute(saved.route)];
+      return { ...config, ...saved, id: normalizeRoute(saved.route), route: normalizeRoute(saved.route), ref: null };
+    });
+  openWindows.set(mergedWindows);
 
-	function updateDocumentTitle(id: string) {
-		openWindows.update((ws) => {
-			const win = ws.find((w) => w.id === id);
-			document.title = win ? `${win.title} - Charlie Dean` : "Charlie Dean Portfolio - Charlie Dean";
-			return ws;
-		});
-	}
+  // Initialize store with merged windows.
+  openWindows.set(mergedWindows);
 
-	function handleWindowFocus(id: string) {
-		const win = get(openWindows).find((w) => w.id === id);
-		if (win) {
-			focusedWindow.set(win);
-			updateDocumentTitle(id);
-			goto(win.route);
-			console.log('Focused window:', id);
-		}
-	}
+  // -------------------------------
+  // Helper: Update document title based on focused window
+  // -------------------------------
+  function updateDocumentTitle(id: string) {
+    openWindows.update((windows) => {
+      const win = windows.find((w) => w.id === id);
+      document.title = win
+        ? `${win.title} - Charlie Dean`
+        : "Charlie Dean Portfolio - Charlie Dean";
+      return windows;
+    });
+  }
 
-	function bringWindowToFront(id: string) {
-		openWindows.update((ws) => {
-			const win = ws.find((w) => w.id === id);
-			if (win && win.ref && typeof win.ref.focus === 'function') {
-				win.ref.focus();
-			}
-			return ws;
-		});
-	}
+  // -------------------------------
+  // Handle route changes from $page
+  // -------------------------------
+  async function handleRouteChange(route: string) {
+    route = normalizeRoute(route);
+    let baseConfig = windowConfig[route];
+    
+    // If no static config is found, check if it's a dynamic post route
+    if (!baseConfig) {
+      if (route.startsWith('/portfolio/') && route !== '/portfolio') {
+        // Use the base config for dynamic posts
+        baseConfig = windowConfig['/portfolio/[id]'];
+        
+        // For dynamic routes, we'll need to create a unique ID
+        // and update the title later when content loads
+        const postId = route.split('/').pop();
+        
+        if (baseConfig) {
+          // Create a copy of the base config with a unique ID
+          baseConfig = {
+            ...baseConfig,
+            id: route, // Use full route as ID for uniqueness
+            route: route,
+            title: `Loading ${postId}...` // Temporary title until data loads
+          };
+        }
+      } else {
+        console.log("404 - no page for route:", route);
+        return;
+      }
+  }
+    
+    openWindows.update((windows) => {
+      // For dynamic post routes, ensure uniqueness by using the full route as the window id
+      const windowId = route;
+      const existing = windows.find((w) => w.id === windowId);
+      if (existing) {
+        // Bring existing window to the top if it's not already focused.
+        if (get(focusedWindow)?.id !== existing.id) {
+          const others = windows.filter((w) => w.id !== windowId);
+          windows = [...others, existing];
+          focusedWindow.set(existing);
+          updateDocumentTitle(existing.id);
+        }
+      } else {
+        // Create a new window entry using the dynamic post base config
+        const newWindow: WindowEntry = {
+          ...baseConfig,
+          id: windowId,
+          route: windowId, // unique dynamic route
+          ref: null,
+          xyorigin: lastOrigin || undefined,
+          data, // data will be fetched on mount if needed
+        };
+        windows = [...windows, newWindow];
+        focusedWindow.set(newWindow);
+        updateDocumentTitle(newWindow.id);
+        lastOrigin = null;
+      }
+      return windows;
+    });
+    
+    await tick();
+    const win = get(openWindows).find((w) => normalizeRoute(w.route) === route);
+    if (win && win.ref && typeof win.ref.focus === "function") {
+      win.ref.focus();
+    }
+  }
 
-	async function handleOpenWindow(event: CustomEvent<{ config: WindowEntry }>) {
-		const { config } = event.detail;
-		// Normalize the id by stripping any leading slash.
-		const normalizedId = config.id.replace(/^\//, '');
-		openWindows.update((ws) => {
-			const existingWindow = ws.find((w) => w.id === normalizedId);
-			if (!existingWindow) {
-				ws.push({ ...config, id: normalizedId, ref: null });
-			} else {
-				bringWindowToFront(normalizedId);
-			}
-			return ws;
-		});
-		await tick();
-		openWindows.update((ws) => {
-			const newWindow = ws.find((w) => w.id === normalizedId);
-			if (newWindow && newWindow.ref && typeof newWindow.ref.focus === 'function') {
-				newWindow.ref.focus();
-			}
-			return ws;
-		});
-		window.dispatchEvent(new CustomEvent('open-window-handled'));
-	}
+  // Subscribe to $page changes so that when the URL changes, we open/focus the corresponding window.
+  onMount(() => {
+    const currentRoute = $page.url.pathname;
+    handleRouteChange(currentRoute);
 
-	onMount(() => {
-		const handleOpenWindowListener = handleOpenWindow as unknown as EventListener;
-		window.addEventListener('open-window', handleOpenWindowListener);
-		return () => {
-			window.removeEventListener('open-window', handleOpenWindowListener);
-		};
-	});
+    const unsubscribe = page.subscribe(($page) => {
+      const newRoute = $page.url.pathname;
+      handleRouteChange(newRoute);
+    });
+    return unsubscribe;
+  });
 
-	function closeWindow(id: string) {
-		openWindows.update((ws) => {
-			const updated = ws.filter((win) => win.id !== id);
-			if (updated.length > 0) {
-				const last = updated[updated.length - 1];
-				if (last.ref && typeof last.ref.focus === 'function') {
-					last.ref.focus();
-					// updateDocumentTitle(last.id), etc. if you have that code
-					focusedWindow.set(last);
-				}
-			} else {
-				// If no windows left, reset document title, etc.
-			}
-			return updated;
-		});
+  // -------------------------------
+  // Additional Window Functions (optional)
+  // -------------------------------
 
-	}
+  function handleWindowFocus(id: string) {
+    const win = get(openWindows).find((w) => w.id === id);
+    if (win && get(focusedWindow)?.id !== id) {
+      focusedWindow.set(win);
+      updateDocumentTitle(win.id);
+      goto(win.route);
+      if (win.ref && typeof win.ref.focus === "function") {
+        win.ref.focus();
+      }
+    }
+  }
 
-	// Listen for window updates (dragging/resizing) and update the store.
-	function handleWindowUpdate(
-		event: CustomEvent<{
-			id: string;
-			currentSize: { width: number; height: number };
-			currentPosition: { x: number; y: number };
-		}>
-	) {
-		updateWindow(event.detail.id, {
-			currentSize: event.detail.currentSize,
-			currentPosition: event.detail.currentPosition
-		});
-	}
+  function bringWindowToFront(id: string) {
+    openWindows.update((windows) => {
+      const win = windows.find((w) => w.id === id);
+      if (win && win.ref?.focus) {
+        win.ref.focus();
+      }
+      return windows;
+    });
+  }
 
-	// function closeWindow() {
-	// 	console.log("windowManager recieved closeWindow")
-	// }
+  function closeWindow(id: string) {
+    openWindows.update((windows) => {
+      const updated = windows.filter((win) => win.id !== id);
+      if (updated.length > 0) {
+        const last = updated[updated.length - 1];
+        if (last.ref?.focus) {
+          last.ref.focus();
+          focusedWindow.set(last);
+        }
+      }
+      return updated;
+    });
+  }
+
+  function handleWindowUpdate(
+    event: CustomEvent<{
+      id: string;
+      currentSize: { width: number; height: number };
+      currentPosition: { x: number; y: number };
+    }>
+  ) {
+    updateWindow(event.detail.id, {
+      currentSize: event.detail.currentSize,
+      currentPosition: event.detail.currentPosition,
+    });
+  }
+
+  // Expose closeWindow via context if needed.
+  setContext("windowManager", closeWindow);
 </script>
 
+<!-- Render all open windows -->
 {#each $openWindows as win (win.id)}
-	<Window
-		closeWindow={closeWindow}
-		{...win}
-		on:focus={(event) => handleWindowFocus(event.detail.id)}
-		on:update={handleWindowUpdate}
-		bind:this={win.ref}
-		minHeight={150}
-		minWidth={300}
-		icon={win.icon}
-		
-	>
-	<svelte:component this={win.component} />
-
-	</Window>
+  <Window
+    {closeWindow}
+    {...win}
+    on:focus={(event) => handleWindowFocus(event.detail.id)}
+    on:update={handleWindowUpdate}
+    bind:this={win.ref}
+    minHeight={150}
+    minWidth={300}
+    icon={win.icon}
+  >
+    <!-- Render the page component defined in the page module -->
+    <svelte:component this={win.component} data={win.data}/>
+  </Window>
 {/each}

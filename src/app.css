@@ -44,7 +44,7 @@
     }
   }
 
-  html::selection {
+::selection {
     background-color: var(--_colors---lavender);
   }
   
@@ -72,6 +72,10 @@
     inset: 0%;
     user-select: none;
     -webkit-user-select: none;
+  }
+
+  .titlebar:active{
+    cursor: grabbing;
   }
   
   .window-title {
@@ -373,7 +377,11 @@
     margin-right: auto;
     position: absolute;
     overflow: clip;
+    overscroll-behavior: none;
   }
+
+  body {overscroll-behavior: none;}
+  html {overscroll-behavior: none;}
   
   .editorial-headline {
     max-width: 80%;
@@ -658,10 +666,7 @@
     font-style: normal;
   }
 
-  .video {
-    width: 100%;
-    height: 100%;;
-  }
+  
   
   @media screen and (max-width: 767px) {
     .menubar-item.logo {

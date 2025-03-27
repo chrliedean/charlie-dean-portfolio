@@ -1,53 +1,25 @@
-import AboutPage from '../../routes/about/+page.svelte';
-import HomePage from '../../routes/+page.svelte';
-import ContactPage from '../../routes/contact/+page.svelte';
-import EnterPassword from '../../routes/enter-password/+page.svelte';
-import PortfolioPage from '../../routes/portfolio/+page.svelte';
-import ShaveYourTonguePage from '../../routes/portfolio/shave-your-tongue/+page.svelte';
+interface WindowMeta {
+  id: string;
+  title: string;
+  route: string;
+  // any other properties
+}
 
-import type { WindowEntry } from '../types/WindowEntry.ts';
+export default interface WindowEntry extends WindowMeta {
+  route: string;
+  component: any;
+}
 
-export const windowConfig: Record<string, WindowEntry> = {
-  '/about': {
-    id: 'about',
-    title: '📔 About',
-    component: AboutPage,
-    route: '/about',
-  },
-  '/': {
-    id: 'home',
-    title: '🏠 Home',
-    component: HomePage,
-    route: '/',
-    defaultSize: {width: 800, height: 600}
-  },
-  '/contact': {
-    id: 'contact',
-    title: '📧 Contact',
-    component: ContactPage,
-    route: '/contact',
-    resizable: false,
-    defaultSize: { width: 300, height: 400 },
-  },
-  '/enter-password': {
-    id: 'enter-password',
-    title: '🔒 Enter Password',
-    component: EnterPassword,
-    route: '/enter-password',
-    resizable: false,
-    style: 'alert'
-  },
-  '/portfolio': {
-    id: 'portfolio',
-    title: 'Portfolio',
-    component: PortfolioPage,
-    route: '/portfolio',
-    icon: 'folder',
-  },
-  '/portfolio/shave-your-tongue': {
-    id: 'portfolio/shave-your-tongue',
-    title: 'Shave Your Tongue',
-    component: ShaveYourTonguePage,
-    route: '/portfolio/shave-your-tongue',
+const modules = import.meta.glob('/src/routes/**/+page.svelte', { eager: true }) as Record<string, any>;
+const config: Record<string, WindowEntry> = {};
+
+for (const path in modules) {
+  const mod = modules[path];
+  if (mod.windowMeta) {
+    // Convert file path to route (e.g. "/src/routes/portfolio/+page.svelte" → "/portfolio")
+    const route = path.replace('/src/routes', '').replace('/+page.svelte', '') || '/';
+    config[route] = { ...mod.windowMeta, route, component: mod.default };
   }
-};
+}
+
+export const windowConfig = config;

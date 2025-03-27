@@ -1,3 +1,11 @@
+<script context="module">
+      export const windowMeta= {
+    id: 'about',
+    title: '📔 About',
+    route: '/about',
+      };
+</script>
+
 <svelte:head>
 	<title>Charlie Dean - About</title>
 	<meta name="description" content="This is where the description goes for SEO" />

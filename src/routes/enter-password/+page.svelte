@@ -1,12 +1,20 @@
+<script context="module">
+  export const windowMeta= {
+id: 'enter-password',
+title: 'Enter Password',
+route: 'enter-password',
+style: 'alert',
+resizable: false,
+  };
+</script>
 <script lang="ts">
   import { getContext } from 'svelte';
-  
-  // Retrieve the closeWindow function from the context
-  const { closeWindow } = getContext('windowManager') as { closeWindow: (id: string) => void };
+
+  // Retrieve the closeWindow function and windowId from context.
+  const closeWindow = getContext('windowManager') as (id: string) => void;
   const windowId = getContext('windowId') as string;
-  // Get id from props (if you're still passing it as a prop)
-  console.log("id: ", windowId);
 </script>
+
 
 <div class="alert">
   <div class="icon-container"></div> 
@@ -15,6 +23,6 @@
     <span>You're attempting to enter a secure area of the site. Please enter a password.</span>
     <input type="password" placeholder="Password" class="password-input">
     <button class="button primary">Submit</button>
-    <button type="button" class="button" onclick={() => closeWindow(windowId)}>Cancel</button>
+    <button type="button" class="button" onclick={()=>closeWindow(windowId)}>Cancel</button>
   </div>
 </div>

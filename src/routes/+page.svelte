@@ -1,3 +1,11 @@
+<script context="module">
+  export const windowMeta= {
+    id: 'home',
+    title: '🏠 Home',
+    route: '/',
+    defaultSize: {width: 800, height: 600}
+  };
+  </script>
 <svelte:head>
 	<title>Charlie Dean - Home</title>
 	<meta name="description" content="This is where the description goes for SEO" />

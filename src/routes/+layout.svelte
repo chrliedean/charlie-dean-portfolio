@@ -1,3 +1,4 @@
+<!-- /+layout.svelte -->
 <script>
     import '../webflow.css';
     import '../normalize.css';

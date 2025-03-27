@@ -11,30 +11,29 @@ export const openWindows = writable<WindowEntry[]>(initialWindows);
 export const focusedWindow = writable<WindowEntry | null>(null);
 
 // Helper to update a window entry
-export const updateWindow = (
-	id: string,
-	newData: Partial<WindowEntry>
-) => {
-	openWindows.update((windows) => {
-		const index = windows.findIndex((win) => win.id === id);
-		if (index !== -1) {
-			windows[index] = { ...windows[index], ...newData };
+export function updateWindow(id: string, updates: Partial<WindowEntry>) {
+	openWindows.update(windows => {
+	  return windows.map(window => {
+		if (window.id === id || window.route === id) {
+		  return { ...window, ...updates };
 		}
-		return windows;
+		return window;
+	  });
 	});
-};
+  }
 
 // Persist only serializable fields to localStorage whenever openWindows changes.
 openWindows.subscribe((windows) => {
 	const persistable = windows.map(
-		({ id, title, route, defaultSize, resizable, currentSize, currentPosition }) => ({
+		({ id, title, route, defaultSize, resizable, currentSize, currentPosition, minimized }) => ({
 			id,
 			title,
 			route,
 			defaultSize,
 			resizable,
 			currentSize,
-			currentPosition
+			currentPosition,
+			minimized
 		})
 	);
 	if (typeof localStorage !== 'undefined') {
