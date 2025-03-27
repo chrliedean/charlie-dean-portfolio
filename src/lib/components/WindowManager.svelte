@@ -98,25 +98,45 @@
 async function handleRouteChange(route: string) {
   route = normalizeRoute(route);
   let baseConfig = windowConfig[route];
+  let dynamicData = null;
   
   // If no static config is found, check if it's a dynamic post route
   if (!baseConfig) {
     if (route.startsWith('/portfolio/') && route !== '/portfolio') {
+      // Get the post ID from the route
+      const postId = route.split('/').pop() || '';
+      console.log(`Handling dynamic post route: ${route}, postId: ${postId}`);
+      
       // Use the base config for dynamic posts
       baseConfig = windowConfig['/portfolio/[id]'];
       
-      // For dynamic routes, we'll need to create a unique ID
-      // and update the title later when content loads
-      const postId = route.split('/').pop();
-      
       if (baseConfig) {
+        // Try to fetch post data
+        try {
+          // Only do this fetch if we're on the client
+          if (typeof window !== 'undefined') {
+            const response = await fetch(`/api/portfolio-posts/${postId}`);
+            if (response.ok) {
+              dynamicData = await response.json();
+              console.log(`Fetched data for post ${postId}:`, dynamicData);
+            } else {
+              console.error(`Failed to fetch post ${postId}`);
+            }
+          }
+        } catch (err) {
+          console.error(`Error fetching post data for ${postId}:`, err);
+        }
+        
         // Create a copy of the base config with a unique ID
         baseConfig = {
           ...baseConfig,
           id: route, // Use full route as ID for uniqueness
           route: route,
-          title: `Loading ${postId}...` // Temporary title until data loads
+          title: dynamicData?.title || `Loading ${postId}...`,
+          data: dynamicData
         };
+      } else {
+        console.log(`No baseConfig found for dynamic route: ${route}`);
       }
     } else {
       console.log("404 - no page for route:", route);

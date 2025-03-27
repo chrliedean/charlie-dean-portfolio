@@ -9,7 +9,7 @@ export async function GET({ params }) {
     const { id } = params;
     
     // Import the markdown file
-    const post = await import(`../../../../portfolio-files/${id}.md`);
+    const post = await import(`/src/portfolio-files/${id}.md`);
     
     // Return just the metadata
     return json({
