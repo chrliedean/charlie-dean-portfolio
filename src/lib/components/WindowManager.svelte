@@ -95,48 +95,41 @@
   // -------------------------------
 
 
-async function handleRouteChange(route: string) {
+  async function handleRouteChange(route: string) {
   route = normalizeRoute(route);
+  console.log(`🔄 Handling route change to: ${route}`);
+  
   let baseConfig = windowConfig[route];
-  let dynamicData = null;
+  console.log(`Found baseConfig for route ${route}:`, baseConfig ? 'Yes' : 'No');
   
   // If no static config is found, check if it's a dynamic post route
   if (!baseConfig) {
     if (route.startsWith('/portfolio/') && route !== '/portfolio') {
-      // Get the post ID from the route
-      const postId = route.split('/').pop() || '';
-      console.log(`Handling dynamic post route: ${route}, postId: ${postId}`);
+      console.log(`👉 Detected dynamic portfolio post route: ${route}`);
       
       // Use the base config for dynamic posts
       baseConfig = windowConfig['/portfolio/[id]'];
+      console.log(`Found dynamic route config:`, baseConfig ? 'Yes' : 'No');
+      
+      // For dynamic routes, we'll need to create a unique ID
+      // and update the title later when content loads
+      const postId = route.split('/').pop();
+      console.log(`Post ID: ${postId}`);
       
       if (baseConfig) {
-        // Try to fetch post data
-        try {
-          // Only do this fetch if we're on the client
-          if (typeof window !== 'undefined') {
-            const response = await fetch(`/api/portfolio-posts/${postId}`);
-            if (response.ok) {
-              dynamicData = await response.json();
-              console.log(`Fetched data for post ${postId}:`, dynamicData);
-            } else {
-              console.error(`Failed to fetch post ${postId}`);
-            }
-          }
-        } catch (err) {
-          console.error(`Error fetching post data for ${postId}:`, err);
-        }
+        console.log(`Using base config for post: ${postId}`, baseConfig);
         
         // Create a copy of the base config with a unique ID
         baseConfig = {
           ...baseConfig,
           id: route, // Use full route as ID for uniqueness
           route: route,
-          title: dynamicData?.title || `Loading ${postId}...`,
-          data: dynamicData
+          title: `Loading ${postId}...` // Temporary title until data loads
         };
       } else {
-        console.log(`No baseConfig found for dynamic route: ${route}`);
+        console.error(`❌ No base config found for dynamic route at /portfolio/[id]`);
+        console.log(`Available routes in windowConfig:`, Object.keys(windowConfig));
+        return;
       }
     } else {
       console.log("404 - no page for route:", route);
@@ -144,27 +137,13 @@ async function handleRouteChange(route: string) {
     }
   }
   
-  // Attempt to load page data for this route if it's a standard SvelteKit route
-  let pageData = null;
-  try {
-    // This won't work for client-side navigation, but we can use it as a fallback
-    if (route === '/portfolio') {
-      const response = await fetch('/api/portfolio-files');
-      if (response.ok) {
-        const posts = await response.json();
-        pageData = { posts };
-        console.log("Loaded portfolio data:", pageData);
-      }
-    }
-  } catch (error) {
-    console.error("Error loading page data:", error);
-  }
-  
   openWindows.update((windows) => {
     // For dynamic post routes, ensure uniqueness by using the full route as the window id
     const windowId = route;
     const existing = windows.find((w) => w.id === windowId);
+    
     if (existing) {
+      console.log(`🔍 Found existing window for ${route}, bringing to front`);
       // Bring existing window to the top if it's not already focused.
       if (get(focusedWindow)?.id !== existing.id) {
         const others = windows.filter((w) => w.id !== windowId);
@@ -173,6 +152,7 @@ async function handleRouteChange(route: string) {
         updateDocumentTitle(existing.id);
       }
     } else {
+      console.log(`🆕 Creating new window for route ${route}`);
       // Create a new window entry using the dynamic post base config
       const newWindow: WindowEntry = {
         ...baseConfig,
@@ -180,8 +160,10 @@ async function handleRouteChange(route: string) {
         route: windowId, // unique dynamic route
         ref: null,
         xyorigin: lastOrigin || undefined,
-        data: pageData, // Use the loaded data if available
+        data, // data will be fetched on mount if needed
       };
+      console.log(`New window config:`, newWindow);
+      
       windows = [...windows, newWindow];
       focusedWindow.set(newWindow);
       updateDocumentTitle(newWindow.id);
@@ -189,11 +171,14 @@ async function handleRouteChange(route: string) {
     }
     return windows;
   });
-
+  
   await tick();
   const win = get(openWindows).find((w) => normalizeRoute(w.route) === route);
   if (win && win.ref && typeof win.ref.focus === "function") {
+    console.log(`Focusing window for ${route}`);
     win.ref.focus();
+  } else {
+    console.log(`Cannot focus window - missing ref or focus method`, win);
   }
 }
 

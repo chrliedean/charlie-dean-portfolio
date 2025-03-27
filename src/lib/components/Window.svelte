@@ -152,6 +152,10 @@
   }
 
   onMount(() => {
+    console.log(`Window mounted for ${id}`, {
+      hasComponent: !!$$slots.default,
+      data: $$props.data
+    });
     const cleanup = () => {
       document.removeEventListener("mousedown", handleDocumentClick);
       window.removeEventListener("resize", clampPositionToViewport);
@@ -400,7 +404,7 @@
     </div>
   </div>
   <div class="window-body" role="presentation">
-    <slot {id} />
+    <slot {...$$restProps} {id} />
   </div>
   <div
     class="resize-handle"
