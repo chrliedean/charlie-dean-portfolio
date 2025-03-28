@@ -1,12 +1,12 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { formatDate } from '$lib/utils.js';
+    import { getYear } from '$lib/utils.js';
     import { updateWindow } from '$lib/stores/windows';
     import { page } from '$app/stores';
     
     // Accept data from both props and the page store
     export let data;
-    
+
     // Use SvelteKit's page store as a fallback
     $: pageData = data || $page.data;
     
@@ -52,19 +52,12 @@
   {#if pageData && pageData.meta}
     <article>
       <hgroup>
-        <h1>{pageData.meta.title || 'No title'}</h1>
-        <p>Published at {pageData.meta.date ? formatDate(pageData.meta.date) : 'Unknown'}</p>
+        <h1 class="editorial-headline">{pageData.meta.title || 'No title'}</h1>
+        <p class="portfolio-year">{pageData.meta.date ? getYear(pageData.meta.date) : 'Unknown'}</p>
+        <p class="portfolio-medium">{pageData.meta.medium || ''}</p>
       </hgroup>
       
-      {#if pageData.meta.categories && pageData.meta.categories.length > 0}
-        <div class="tags">
-          {#each pageData.meta.categories as category}
-            <span class="surface-4">&num;{category}</span>
-          {/each}
-        </div>
-      {/if}
       
-      <p class="medium">{pageData.meta.medium || ''}</p>
       
       <div class="prose">
         {#if pageData.content}

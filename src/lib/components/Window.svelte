@@ -18,6 +18,7 @@
   export let icon = "";
   export let minimized = false;
   export let xyorigin: { x: number; y: number } | null = null;
+  export let maxSize: { width: number; height: number } | null = null;
 
   export let style = "";
   // New exported props for persisted size/position.
@@ -285,14 +286,18 @@
   }
 
   function handleResizing(event: MouseEvent) {
-    if (!isResizing) return;
-    const deltaX = event.clientX - resizeStart.x;
-    const deltaY = event.clientY - resizeStart.y;
-    const newWidth = Math.max(minWidth, startSize.width + deltaX);
-    const newHeight = Math.max(minHeight, startSize.height + deltaY);
-    windowEl.style.width = `${newWidth}px`;
-    windowEl.style.height = `${newHeight}px`;
+  if (!isResizing) return;
+  const deltaX = event.clientX - resizeStart.x;
+  const deltaY = event.clientY - resizeStart.y;
+  let newWidth = Math.max(minWidth, startSize.width + deltaX);
+  let newHeight = Math.max(minHeight, startSize.height + deltaY);
+  if (maxSize) {
+    newWidth = Math.min(newWidth, maxSize.width);
+    newHeight = Math.min(newHeight, maxSize.height);
   }
+  windowEl.style.width = `${newWidth}px`;
+  windowEl.style.height = `${newHeight}px`;
+}
 
   function handleResizeMouseUp() {
     isResizing = false;

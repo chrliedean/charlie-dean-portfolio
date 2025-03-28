@@ -11,5 +11,6 @@
 <img
   {src}
   alt={name}
+  class="icon"
   style="width: {size}; height: {size}; vertical-align: middle; user-select: none; -webkit-user-select: none; draggable"
 />

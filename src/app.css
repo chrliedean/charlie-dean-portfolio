@@ -370,8 +370,9 @@
     right: var(--line-width);
     bottom: var(--line-width);
     opacity: 1;
-    background-color: #ad3e3e;
-    border-radius: 6px;
+    background-image: url('/img/ui/paper-blue.png');
+    background-size: 200px;
+    background-repeat: repeat;
     height: auto;
     margin-left: auto;
     margin-right: auto;
@@ -380,18 +381,28 @@
     overscroll-behavior: none;
   }
 
+  .icon {
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
   body {overscroll-behavior: none;}
   html {overscroll-behavior: none;}
   
   .editorial-headline {
     max-width: 80%;
     min-height: auto;
-    margin-top: 5px;
+    margin-top: 0;
     margin-bottom: 0;
     margin-left: 0;
     padding: 0;
     font-family: Apple Garamond, Times New Roman, sans-serif;
-    font-size: 24px;
+    font-size: 3em;
+  }
+
+  hgroup {
+    margin-top: 0;
   }
   
   .titlebar-button-minimize {
@@ -449,6 +460,10 @@
 
   .alert span {
     margin: 0;
+  }
+
+  .nopadding .window-body {
+    padding: 0;
   }
   
   .button {

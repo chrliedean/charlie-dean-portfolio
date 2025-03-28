@@ -1,4 +1,4 @@
-// src/lib/stores/windows.ts
+// File: src/lib/stores/windows.ts
 import { writable } from 'svelte/store';
 import type { WindowEntry } from '$lib/types/WindowEntry';
 
@@ -20,12 +20,12 @@ export function updateWindow(id: string, updates: Partial<WindowEntry>) {
 		return window;
 	  });
 	});
-  }
+}
 
 // Persist only serializable fields to localStorage whenever openWindows changes.
 openWindows.subscribe((windows) => {
 	const persistable = windows.map(
-		({ id, title, route, defaultSize, resizable, currentSize, currentPosition, minimized }) => ({
+		({ id, title, route, defaultSize, resizable, currentSize, currentPosition, minimized, icon }) => ({
 			id,
 			title,
 			route,
@@ -33,10 +33,13 @@ openWindows.subscribe((windows) => {
 			resizable,
 			currentSize,
 			currentPosition,
-			minimized
+			minimized,
+			icon, // Include icon to preserve post icons
 		})
 	);
+	
 	if (typeof localStorage !== 'undefined') {
+		console.log('Saving windows to localStorage:', persistable.length);
 		localStorage.setItem('openWindows', JSON.stringify(persistable));
 	}
 });

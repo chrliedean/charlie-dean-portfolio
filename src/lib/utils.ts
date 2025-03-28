@@ -6,3 +6,8 @@ export function formatDate(date: string, dateStyle: DateStyle = 'medium', locale
 	const dateFormatter = new Intl.DateTimeFormat(locales, { dateStyle })
 	return dateFormatter.format(dateToFormat)
 }
+
+//returns only the year as a string
+export function getYear(date: string, DateStyle: DateStyle = 'medium', locales = 'en') {
+	return new Date(date).getFullYear().toString()
+}

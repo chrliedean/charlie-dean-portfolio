@@ -11,6 +11,7 @@ export interface WindowEntry {
     ref?: any;
     component: any;
     currentSize?: { width: number; height: number };
+    maxSize?: { width: number; height: number };
     xyorigin? : { x: number; y: number };
     currentPosition?: { x: number; y: number };
     style?: string;

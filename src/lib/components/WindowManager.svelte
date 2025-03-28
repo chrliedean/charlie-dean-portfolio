@@ -59,23 +59,45 @@
   // Merge dynamic config with saved state
   // -------------------------------
   const savedState: any[] = loadSavedState();
-  let mergedWindows: WindowEntry[] = savedState
-    .filter((saved) => {
-      const normRoute = normalizeRoute(saved.route);
-      // Skip dynamic post windows (e.g. /portfolio/some-post) so they are not loaded from localStorage
-      if (normRoute.startsWith('/portfolio/') && normRoute !== '/portfolio') {
-        return false;
+let mergedWindows: WindowEntry[] = savedState
+  .filter((saved) => {
+    const normRoute = normalizeRoute(saved.route);
+    
+    // Check if this is a portfolio post
+    if (normRoute.startsWith('/portfolio/') && normRoute !== '/portfolio') {
+      // Keep valid portfolio posts - we'll just need to ensure
+      // the component is correctly loaded for them
+      return true;
+    }
+    
+    // For standard routes, check if they exist in windowConfig
+    return windowConfig[normRoute] !== undefined;
+  })
+  .map((saved) => {
+    const normRoute = normalizeRoute(saved.route);
+    
+    // For portfolio posts, use the [id] config
+    if (normRoute.startsWith('/portfolio/') && normRoute !== '/portfolio') {
+      const baseConfig = windowConfig['/portfolio/[id]'];
+      if (baseConfig) {
+        // Return a merged config that preserves the unique ID and route
+        return { 
+          ...baseConfig, 
+          ...saved,
+          id: normRoute, 
+          route: normRoute,
+          ref: null 
+        };
       }
-      return windowConfig[normRoute] !== undefined;
-    })
-    .map((saved) => {
-      const config = windowConfig[normalizeRoute(saved.route)];
-      return { ...config, ...saved, id: normalizeRoute(saved.route), route: normalizeRoute(saved.route), ref: null };
-    });
-  openWindows.set(mergedWindows);
+    }
+    
+    // For standard routes, use the normal config
+    const config = windowConfig[normRoute];
+    return { ...config, ...saved, id: normRoute, route: normRoute, ref: null };
+  });
 
-  // Initialize store with merged windows.
-  openWindows.set(mergedWindows);
+// Initialize store with merged windows.
+openWindows.set(mergedWindows);
 
   // -------------------------------
   // Helper: Update document title based on focused window
@@ -89,6 +111,40 @@
       return windows;
     });
   }
+
+  // -------------------------------
+  // Helper: Load Portfolio Posts
+  // -------------------------------
+  async function loadPortfolioPost(postId: string) {
+  try {
+    // First try to get the post data through the API
+    const response = await fetch(`/api/portfolio-files/${postId}`);
+    if (response.ok) {
+      const data = await response.json();
+      console.log(`Loaded data for post ${postId} via API`);
+      return data;
+    }
+    
+    // If that fails, try to import the markdown file directly
+    const post = await import(`/src/portfolio-files/${postId}.md`);
+    if (post && post.metadata) {
+      console.log(`Loaded data for post ${postId} via direct import`);
+      return {
+        content: post.default,
+        meta: {
+          ...post.metadata,
+          id: postId
+        }
+      };
+    }
+    
+    console.error(`Failed to load post ${postId}`);
+    return null;
+  } catch (error) {
+    console.error(`Error loading post ${postId}:`, error);
+    return null;
+  }
+}
 
   // -------------------------------
   // Handle route changes from $page
@@ -133,7 +189,8 @@
         console.error(`❌ No base config found for dynamic route at /portfolio/[id]`);
         return;
       }
-    } else {
+    } 
+    else {
       console.log("404 - no page for route:", route);
       return;
     }
