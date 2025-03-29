@@ -8,6 +8,7 @@
     import WindowManager from '$lib/components/WindowManager.svelte';
     import SoundEffects from '$lib/components/SoundEffects.svelte';
     import  WindowEntry  from '$lib/components/WindowManager.svelte';
+    import Desktop from '$lib/components/Desktop.svelte';
 
     import { browser } from '$app/environment';
     import { page } from '$app/stores';
@@ -22,5 +23,6 @@
 <SoundEffects />
 <section class="section">
     <MenuBar />
+    <Desktop />
     <WindowManager />
 </section>

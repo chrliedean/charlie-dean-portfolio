@@ -270,10 +270,3 @@
     </div>
   {/if}
 </div>
-
-<style>
-  :global(.dropdown-link.selected) {
-    background-color: var(--_colors---azul);
-    color: var(--primary-white-100) !important;
-  }
-</style>

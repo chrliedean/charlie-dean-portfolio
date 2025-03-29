@@ -1,7 +1,6 @@
 <!-- Icon.svelte -->
 <script lang="ts">
-  export let name: string;
-  export let size: string = "1em";
+  let {name, size } = $props()
 
   // Import your icon components
   let src = `/img/icns/${name}.png`;

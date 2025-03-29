@@ -15,6 +15,7 @@
     --_colors---grays-500: #bbb;
     --_colors---azul: #339;
     --_colors---lavender: #CCCCFF;
+    --_colors---beige: #F5F5DC;
     --dropdown: 0;
     --_statuses---dropdown-open: 0;
   }
@@ -128,6 +129,11 @@
     box-shadow: inset var(--negative-line-width) var(--negative-line-width) 0 0 var(--_colors---grays-600);
   }
 
+  .window-body p {
+    font-size: 24px;
+    line-height: 30px;
+  }
+
 .minimized .window-body {
     display: none;
   }
@@ -148,6 +154,15 @@
     overflow: scroll ;
 }
 
+.reader .window-body {
+  background-color: var(--_colors---beige);
+  font-family: Georgia, 'Times New Roman', Times, serif;
+}
+.reader .window-body p {
+  font-size: 1.5em;
+  line-height: 1.5em;
+}
+
 .zoom-parent {
   display: none !important;
 }
@@ -156,26 +171,26 @@
   display: flex !important;
 }
 
-.window-body::-webkit-scrollbar {
+.window-body::-webkit-scrollbar, .browser iframe::-webkit-scrollbar {
     width: 16px;
 }
 
-.window-body::-webkit-scrollbar-track:vertical {
+.window-body::-webkit-scrollbar-track:vertical, .browser iframe::-webkit-scrollbar-track:vertical {
     border-left: var(--line-width) solid var(--_colors---primary-black-900);
     border-bottom: var(--line-width) solid var(--_colors---primary-black-900);
 }
 
-.window-body::-webkit-scrollbar-track:horizontal {
+.window-body::-webkit-scrollbar-track:horizontal, .browser iframe::-webkit-scrollbar-track:horizontal {
     border-top: var(--line-width) solid var(--_colors---primary-black-900);
     border-right: var(--line-width) solid var(--_colors---primary-black-900);
 }
 
-.window-body::-webkit-scrollbar-track {
+.window-body::-webkit-scrollbar-track, .browser iframe::-webkit-scrollbar-track {
     background-color: #AAAAAA;
     box-shadow: inset var(--line-width) var(--line-width) 0 var(--_colors---grays-600), inset var(--negative-line-width) var(--negative-line-width) 0 var(--_colors---grays-400);
 }
   
-.window-body::-webkit-scrollbar-thumb {
+.window-body::-webkit-scrollbar-thumb, .browser iframe::-webkit-scrollbar-thumb {
     background-color: #9999FF;
     background-image: url('/img/scrollhandle.png');
     image-rendering: pixelated;
@@ -186,11 +201,11 @@
     border: var(--line-width) solid var(--_colors---primary-black-900);
 }
 
-.window-body::-webkit-scrollbar-thumb:active {
+.window-body::-webkit-scrollbar-thumb:active, .browser iframe::-webkit-scrollbar-thumb:active {
     background-color: #6666CC;
 }
 
-.window-body::-webkit-scrollbar-button {
+.window-body::-webkit-scrollbar-button, .window-body::-webkit-scrollbar-button:vertical, .browser iframe::-webkit-scrollbar-button, .browser iframe::-webkit-scrollbar-button:vertical {
     image-rendering: pixelated;
     display: block;
     height: 16px;
@@ -200,15 +215,15 @@
     box-shadow: inset var(--line-width) var(--line-width) 0 var(--primary-white-100), inset var(--negative-line-width) var(--negative-line-width) 0 var(--_colors---grays-500);
 }
 
-.window-body::-webkit-scrollbar-button:vertical {
+.window-body::-webkit-scrollbar-button:vertical, .browser iframe::-webkit-scrollbar-button:vertical {
     border-right: 0px;
 }
 
-.window-body::-webkit-scrollbar-button:horizontal {
+.window-body::-webkit-scrollbar-button:horizontal, .browser iframe::-webkit-scrollbar-button:horizontal {
     border-bottom:0px;
 }
 
-.window-body::-webkit-scrollbar-button:vertical:decrement {
+.window-body::-webkit-scrollbar-button:vertical:decrement, .browser iframe::-webkit-scrollbar-button:vertical:decrement {
     border-top: 0px;
     border-bottom: 0px;
     background-image: url('/img/arrow-up.png');
@@ -217,7 +232,7 @@
     background-repeat: no-repeat;
 }
 
-.window-body::-webkit-scrollbar-button:horizontal:decrement {
+.window-body::-webkit-scrollbar-button:horizontal:decrement, .browser iframe::-webkit-scrollbar-button:horizontal:decrement {
     border-left: 0px;
     border-right: 0px;
     background-image: url('/img/arrow-left.png');
@@ -226,41 +241,44 @@
     background-repeat: no-repeat;
 }
 
-.window-body::-webkit-scrollbar-button:horizontal:increment {
-    background-image: url('/img/arrow-right.png');
+.window-body::-webkit-scrollbar-button:horizontal:increment, .browser iframe::-webkit-scrollbar-button:horizontal:increment {
     background-size: 5px;
     background-position: center;
     background-repeat: no-repeat
 }
 
-.window-body::-webkit-scrollbar-button:vertical:increment {
+.window-body::-webkit-scrollbar-button:vertical:increment, .browser iframe::-webkit-scrollbar-button:vertical:increment {
     background-image: url('/img/arrow-down.png');
     background-size: 8px;
     background-position: center;
     background-repeat: no-repeat;
 }
 
-.window-body::-webkit-scrollbar-button:start {
+.window-body::-webkit-scrollbar-button:start, .window-body::-webkit-scrollbar-button:end, .browser iframe::-webkit-scrollbar-button:start, .browser iframe::-webkit-scrollbar-button:end {
     display: none;
 }
 
-.inactive .window-body::-webkit-scrollbar-track {
+.inactive .window-body::-webkit-scrollbar-track, .inactive .browser iframe::-webkit-scrollbar-track {
     background-color: var(--_colors---grays-200);
     border-color: #DADADA;
     box-shadow: none;
 }
 
-.inactive .window-body::-webkit-scrollbar-thumb {
+.inactive .window-body::-webkit-scrollbar-thumb, .inactive .browser iframe::-webkit-scrollbar-thumb {
     display: none;
 }
 
-.inactive .window-body::-webkit-scrollbar-button {
+.inactive .window-body::-webkit-scrollbar-button, .inactive .window-body::-webkit-scrollbar-button:vertical, .inactive .browser iframe::-webkit-scrollbar-button, .inactive .browser iframe::-webkit-scrollbar-button:vertical {
     border-color: #DADADA;
     background-color: var(--_colors---grays-200);
     box-shadow: none;
     background-image: none !important;
 }
 
+.browser .window-body {
+  overflow:hidden;
+  padding: 0;
+}
 
 .resizable .resize-handle {
     display: block;
@@ -379,12 +397,54 @@
     position: absolute;
     overflow: clip;
     overscroll-behavior: none;
+    border-radius: 5px;
   }
 
   .icon {
     -webkit-user-drag: none;
     -webkit-user-select: none;
     user-select: none;
+    image-rendering: pixelated
+
+  }
+
+  .desktop {
+    position: absolute;
+    top: 26px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .desktop-icon {
+    margin: 0;
+    position: absolute;
+    width: fit-content;
+  }
+
+  .desktop-icon figcaption {
+    text-align: center;
+    font-family: 'Geneva', sans-serif;
+    background: #eeeeeeb5;
+    font-size: 20px;
+    margin: 8px;
+    padding: 0px 4px;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .desktop-icon:focus figcaption {
+    background: var(--_colors---primary-black-900);
+    color: var(--primary-white-100);
+  }
+
+  .desktop-icon:focus .icon {
+    filter: brightness(0.5);
+  }
+
+  .desktop-icon img.icon {
+    display: block;
+    margin: 0 auto;
   }
 
   body {overscroll-behavior: none;}
@@ -524,6 +584,7 @@
     padding: 0 8px;
     font-family: Charcoal, Tahoma, sans-serif;
     text-decoration: none;
+    text-wrap: nowrap;
     display: flex;
   }
 
@@ -611,6 +672,8 @@
     flex: 0 auto;
     display: flex;
   }
+
+ 
   
   .list {
     margin-bottom: 0;
@@ -659,12 +722,18 @@
   }
   
   .image {
-    box-sizing: content-box;
-    object-fit: fill;
-    border-radius: 3px;
-    margin-top: 10px;
-    padding: 0;
+    width: 100%;
     display: block;
+    margin: 0 auto;
+    height: auto;
+    border-radius: 5px;
+    user-select: none;
+    -webkit-user-select: none;
+
+  }
+
+  .max400 {
+    max-width: 400px;;
   }
   
   .paragraph {
@@ -681,6 +750,85 @@
     font-style: normal;
   }
 
+  .file-list {
+    width: 100%;
+    min-width: 400px;
+    font-size: 20px;
+    position: sticky;
+    top: 0;
+  }
+
+  
+  .file-list thead th {
+    border: var(--line-width) solid var(--_colors---primary-black-900);
+    box-shadow: inset var(--line-width) var(--line-width) 0 0 var(--primary-white-100), inset var(--negative-line-width) var(--negative-line-width) 0 0 var(--_colors---grays-600);
+    text-align: center;
+    user-select: none;
+    -webkit-user-select: none;
+    position: sticky;
+    top: 0;
+    background: var(--_colors---grays-400);
+
+  }
+
+.file-list th.sorticon {
+  background-image: url('/img/ui/reorder.png');
+  background-size: .8em;
+  background-position: center;
+  image-rendering: pixelated;
+  width: 1em;
+}
+
+
+  .file-list thead th:focus {
+    background-color: var(--_colors---grays-700);
+    box-shadow: inset var(--negative-line-width) var(--negative-line-width) 0 0 var(--_colors---grays-400), inset var(--line-width) var(--line-width) 0 0 var(--_colors---grays-800);
+  }
+
+  .file-list thead th.title {
+    padding-left: calc(1.5em + 20px);
+  }
+
+  .file-list tr th, .file-list tr td {
+    text-align: left;
+    padding-left: 10px;
+
+  }
+
+  .file-list td.icon {
+    width: calc(1.5em + 10px);
+  }
+
+  .file-list tbody th {
+    font-weight: 400;
+  }
+
+  .file-list tbody tr {
+    font-size: 22px;
+    background: var(--_colors---grays-200);
+    border-bottom: var(--double-line-width) solid var(--primary-white-100);
+  }
+
+  .file-list tbody tr:focus {
+    background: var(--_colors---grays-300);
+  }
+
+  .file-list tbody td.active, .file-list tbody th.active {
+    background: var(--_colors---grays-300);
+  }
+
+  .file-list td {
+    padding: 10px 0;
+  }
+
+  .file-list a {
+    text-decoration: none;
+    color: var(--_colors---primary-black-900);
+  }
+
+  .file-list a:visited {
+    color: var(--_colors---primary-black-900);
+  }
   
   
   @media screen and (max-width: 767px) {
@@ -721,7 +869,7 @@
   }
   @font-face {
     font-family: 'Geneva';
-    src: url('/fonts/GENEVA.TTF') format('truetype');
+    src: url('/fonts/Geneva.ttf') format('truetype');
     font-weight: 400;
     font-style: normal;
     font-display: swap;

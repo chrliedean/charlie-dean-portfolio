@@ -24,6 +24,10 @@ declare global {
 			data: { commands: string[] };
 			trigger: (command: string) => void;
 		  };
+		  tts: {
+			data: { tts: string[] };
+			sendText: (text: string) => void;
+		  }
 		};
 	  }
 }

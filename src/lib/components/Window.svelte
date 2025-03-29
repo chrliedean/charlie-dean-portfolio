@@ -206,7 +206,7 @@
     startDragging(event);
   }
 
-  const handleDocumentClick = (event: MouseEvent) => {
+  const handleDocumentClick = (event: MouseEvent | TouchEvent) => {
     if (windowEl.contains(event.target as Node)) {
       windowEl.classList.add("active");
       windowEl.classList.remove("inactive");
@@ -285,7 +285,7 @@
     soundCommand.set("drag-start");
   }
 
-  function handleResizing(event: MouseEvent) {
+  function handleResizing(event: MouseEvent ) {
   if (!isResizing) return;
   const deltaX = event.clientX - resizeStart.x;
   const deltaY = event.clientY - resizeStart.y;
@@ -326,7 +326,7 @@
     dispatch("focus", { id });
   }
 
-  function minimizeWindow(event: MouseEvent) {
+  function minimizeWindow(event: MouseEvent | TouchEvent ) {
     event.preventDefault();
     event.stopPropagation();
     if (minimized) {
@@ -348,7 +348,7 @@
   // ---------------------------
   // Close Button & Animation
   // ---------------------------
-  async function closeWindowButton(event: MouseEvent) {
+  async function closeWindowButton(event: MouseEvent | TouchEvent) {
     event.preventDefault();
     event.stopPropagation();
     soundCommand.set("wcls"); // Trigger close sound.
@@ -403,7 +403,7 @@
       <div class="titlebar-button zoom-parent">
         <div class="titlebar-button-zoom"></div>
       </div>
-      <div class="titlebar-button" onclick={minimizeWindow} role="presentation">
+      <div class="titlebar-button" onclick={minimizeWindow} ontouchstart={minimizeWindow} role="presentation">
         <div class="titlebar-button-minimize"></div>
       </div>
     </div>

@@ -6,7 +6,7 @@ icon: movie
 date: '2023-4-14'
 medium: Single-channel digital video, 1 min 11 sec
 categories:
-  - video
+  - Video
 published: true
 ---
 

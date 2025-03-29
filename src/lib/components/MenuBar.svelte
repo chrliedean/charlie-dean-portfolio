@@ -6,13 +6,14 @@
   import Dropdown from "./Dropdown.svelte";
   import Icon from "./Icon.svelte";
   import { writable } from "svelte/store";
+  import { browser } from "$app/environment";
 
   // Create a global dropdown manager store and share it via context
   const activeDropdownStore = writable<string | null>(null);
   setContext('activeDropdown', activeDropdownStore);
 
   let time = $state("");
-
+  let isFullscreen = $state(false);
   // Function to get time in 12-hour format
   function updateTime() {
     const now = new Date();
@@ -38,6 +39,27 @@
     // handlers to control the behavior
     e.stopPropagation();
   }
+
+  function toggleFullscreen() {
+    if (!browser) return;
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        isFullscreen = true;
+      }).catch(err => console.error("Error going fullscreen:", err));
+    } else {
+      document.exitFullscreen().then(() => {
+        isFullscreen = false;
+      }).catch(err => console.error("Error exiting fullscreen:", err));
+    }
+  }
+
+  onMount(() => {
+    if (browser) {
+      document.addEventListener('fullscreenchange', () => {
+        isFullscreen = !!document.fullscreenElement;
+      });
+    }
+  });
 </script>
 
 <!-- Made the menubar a div instead of nav to avoid accessibility warnings -->
@@ -47,7 +69,7 @@
       <div 
         class="dropdown-toggle w-dropdown-toggle" 
         slot="toggle"
-        on:click={preventEventBubbling}
+        onclick={preventEventBubbling}
       >
         <div class="menubar-item-contents"></div>
       </div>
@@ -66,7 +88,18 @@
         <a href="#" class="dropdown-link w-dropdown-link" role="menuitem">
           About this Website
         </a>
-      </nav>
+
+        <SmartLink href="/e-charlie" classname="dropdown-link w-dropdown-link" role="menuitem">
+          E-Charlie...
+        </SmartLink>
+
+        <span class="dropdown-link w-dropdown-link" role="menuitem" onclick={toggleFullscreen}>
+          {#if isFullscreen}
+          Extit fullscreen
+          {:else}
+          Enter fullscreen
+          {/if}
+        </span>
     </Dropdown>
     
     <!-- Convert direct links to dropdowns with one item -->
@@ -74,7 +107,7 @@
       <div 
         class="dropdown-toggle w-dropdown-toggle" 
         slot="toggle"
-        on:click={preventEventBubbling}
+        onclick={preventEventBubbling}
       >
         <div class="menubar-item-contents">Portfolio</div>
       </div>
@@ -89,7 +122,7 @@
       <div 
         class="dropdown-toggle w-dropdown-toggle" 
         slot="toggle"
-        on:click={preventEventBubbling}
+        onclick={preventEventBubbling}
       >
         <div class="menubar-item-contents">Client Work</div>
       </div>
@@ -104,7 +137,7 @@
       <div 
         class="dropdown-toggle w-dropdown-toggle" 
         slot="toggle"
-        on:click={preventEventBubbling}
+        onclick={preventEventBubbling}
       >
         <div class="menubar-item-contents">About</div>
       </div>
@@ -119,7 +152,7 @@
       <div 
         class="dropdown-toggle w-dropdown-toggle" 
         slot="toggle"
-        on:click={preventEventBubbling}
+        onclick={preventEventBubbling}
       >
         <div class="menubar-item-contents">Contact</div>
       </div>
@@ -143,7 +176,7 @@
       <div 
         class="dropdown-toggle w-dropdown-toggle" 
         slot="toggle"
-        on:click={preventEventBubbling}
+        onclick={preventEventBubbling}
       >
         <div class="menubar-item-contents">
           {#if $focusedWindow}
@@ -171,9 +204,3 @@
   </div>
 </div>
 
-<style>
-  /* Add any additional styling here */
-  .menubar-item:hover {
-    cursor: default;
-  }
-</style>
