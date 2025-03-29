@@ -112,39 +112,39 @@ openWindows.set(mergedWindows);
     });
   }
 
-  // -------------------------------
-  // Helper: Load Portfolio Posts
-  // -------------------------------
-  async function loadPortfolioPost(postId: string) {
-  try {
-    // First try to get the post data through the API
-    const response = await fetch(`/api/portfolio-files/${postId}`);
-    if (response.ok) {
-      const data = await response.json();
-      console.log(`Loaded data for post ${postId} via API`);
-      return data;
-    }
+//   // -------------------------------
+//   // Helper: Load Portfolio Posts
+//   // -------------------------------
+//   async function loadPortfolioPost(postId: string) {
+//   try {
+//     // First try to get the post data through the API
+//     const response = await fetch(`/api/portfolio-files/${postId}`);
+//     if (response.ok) {
+//       const data = await response.json();
+//       console.log(`Loaded data for post ${postId} via API`);
+//       return data;
+//     }
     
-    // If that fails, try to import the markdown file directly
-    const post = await import(`/src/portfolio-files/${postId}.md`);
-    if (post && post.metadata) {
-      console.log(`Loaded data for post ${postId} via direct import`);
-      return {
-        content: post.default,
-        meta: {
-          ...post.metadata,
-          id: postId
-        }
-      };
-    }
+//     // If that fails, try to import the markdown file directly
+//     const post = await import(`/src/portfolio-files/${postId}.md`);
+//     if (post && post.metadata) {
+//       console.log(`Loaded data for post ${postId} via direct import`);
+//       return {
+//         content: post.default,
+//         meta: {
+//           ...post.metadata,
+//           id: postId
+//         }
+//       };
+//     }
     
-    console.error(`Failed to load post ${postId}`);
-    return null;
-  } catch (error) {
-    console.error(`Error loading post ${postId}:`, error);
-    return null;
-  }
-}
+//     console.error(`Failed to load post ${postId}`);
+//     return null;
+//   } catch (error) {
+//     console.error(`Error loading post ${postId}:`, error);
+//     return null;
+//   }
+// }
 
   // -------------------------------
   // Handle route changes from $page

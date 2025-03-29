@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 
 export async function load({ params }) {
   try {
-    const post = await import(`/src/portfolio-files/${params.id}.md`);
+    const post = await import(`../../../portfolio-files/${params.id}.md`);
     
     console.log(`Loading post ${params.id}`, {
       hasDefault: !!post.default,
