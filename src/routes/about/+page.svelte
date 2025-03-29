@@ -3,7 +3,8 @@
     id: 'about',
     title: '📔 About',
     route: '/about',
-    style: 'reader'
+    style: 'reader',
+    defaultSize: {width: 800, height: 600},
       };
 </script>
 

@@ -8,10 +8,12 @@
   let { src, options } = $props();
   let videoElement: HTMLVideoElement;
   let player: typeof videojs.players;
+  let overrideNative = false;
 
   let defaultOptions = {
     controls: true,
     autoplay: false,
+    playsinline: true,
     fluid: true,
     preload: "auto",
     controlBar: {
@@ -20,6 +22,14 @@
         vertical: true,
       },
     },
+    html5: {
+    hls: {
+      overrideNative: overrideNative
+    },
+    nativeVideoTracks: !overrideNative,
+    nativeAudioTracks: !overrideNative,
+    nativeTextTracks: !overrideNative
+  }
   };
 
   onMount(async () => {
@@ -40,5 +50,5 @@
 
 <video bind:this={videoElement} class="video-js vjs-os9">
   <track kind="captions" />
-  <source {src} type="application/x-mpegURL" />
+  <source src={src} type="application/x-mpegURL" />
 </video>

@@ -22,6 +22,7 @@
   let micPermissionRequested = false;
   // State to track loading status
   let isLoading = true;
+  let currentTarget = "";
 
   // Mouse position tracking
   let mouseX = 0;
@@ -93,8 +94,19 @@
       const match = aiText.match(/\*(.*?)\*/);
       if (match && match[1]) {
         const target = match[1].trim();
-        console.log("Navigating to:", target);
-        goto(`${target}`);
+        currentTarget = target;
+        // console.log("Navigating to:", target);
+        // goto(`${target}`);
+      }
+    });
+
+    scene.addEventListener("ttsStart", (e) => {
+      const event = e as CustomEvent;
+      const ttsText = event.detail.text || "";
+      console.log("TTS started:", ttsText);
+      if (currentTarget !== "") {
+         console.log("Navigating to:", currentTarget);
+         goto(`${currentTarget}`);
       }
     });
     

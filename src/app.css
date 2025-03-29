@@ -278,6 +278,44 @@
 .browser .window-body {
   overflow:hidden;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.browser-controls {
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--_colors---grays-400);
+  border-bottom: var(--line-width) solid var(--_colors---primary-black-900);
+  box-shadow: inset var(--line-width) var(--line-width) 0 0 var(--_colors---grays-200), inset var(--negative-line-width) var(--negative-line-width) 0 0 var(--_colors---grays-600);
+}
+
+.browser iframe {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.browser-controls input {
+  flex-grow: 1;
+  font-size: 20px;
+  padding: 5px;
+}
+
+.browser-controls button {
+  height: 100%;
+}
+
+.browser-controls .icon {
+  margin-bottom: 2px;
+}
+
+
+
+.iframe-container {
+  flex-grow: 1;
 }
 
 .resizable .resize-handle {
@@ -404,7 +442,7 @@
     -webkit-user-drag: none;
     -webkit-user-select: none;
     user-select: none;
-    image-rendering: pixelated
+    image-rendering: pixelated;
 
   }
 
@@ -535,8 +573,6 @@
     text-align: center;
     border-radius: 4px;
     height: 24px;
-    margin-top: 6px;
-    margin-right: 8px;
     padding: 0 6px;
     font-family: Charcoal, Tahoma, sans-serif;
     user-select: none;
