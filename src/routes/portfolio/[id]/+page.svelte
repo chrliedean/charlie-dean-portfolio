@@ -38,8 +38,10 @@
       id: 'portfolio-post',
       title: 'Portfolio Post',
       route: '/portfolio/[id]',
-      defaultSize: { width: 600, height: 400 },
-      icon: 'folder'
+      defaultSize: { width: 1000, height: 800 },
+      maxSize: { width: 1200, height: 1000 },
+      icon: 'folder',
+      style: 'reader',
     };
   </script>
   
@@ -53,8 +55,7 @@
     <article>
       <hgroup>
         <h1 class="editorial-headline">{pageData.meta.title || 'No title'}</h1>
-        <p class="portfolio-year">{pageData.meta.date ? getYear(pageData.meta.date) : 'Unknown'}</p>
-        <p class="portfolio-medium">{pageData.meta.medium || ''}</p>
+        <p class="portfolio-year">{pageData.meta.date ? getYear(pageData.meta.date) : 'Unknown'}, {pageData.meta.medium}</p>
       </hgroup>
       
       

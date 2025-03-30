@@ -13,7 +13,6 @@
   let defaultOptions = {
     controls: true,
     autoplay: false,
-    playsinline: true,
     fluid: true,
     preload: "auto",
     controlBar: {
@@ -48,7 +47,8 @@
   });
 </script>
 
-<video bind:this={videoElement} class="video-js vjs-os9">
+<video bind:this={videoElement} class="video-js vjs-os9" playsinline>
   <track kind="captions" />
   <source src={src} type="application/x-mpegURL" />
 </video>
+

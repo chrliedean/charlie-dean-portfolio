@@ -1,7 +1,6 @@
 <!-- /+layout.svelte -->
 <script>
     import '../webflow.css';
-    import '../normalize.css';
     import '../app.css';
 
     import MenuBar from '$lib/components/MenuBar.svelte';
