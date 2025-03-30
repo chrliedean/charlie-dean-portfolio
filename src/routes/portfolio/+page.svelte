@@ -134,8 +134,10 @@
             <td class="icon title"> 
               <Icon size="1.5em" name={post.icon}/>
             </td>
-            <th scope="row" class="title">
-              <SmartLink href={post.route} classname="title">{post.title}</SmartLink>
+            <th scope="row" class="text title">
+              <SmartLink href={post.route} classname="title">
+                <span>{post.title}</span>
+              </SmartLink>
             </th>
             <td class="date">{formatDate(post.date ?? '')}</td>
             <td class="medium">{post.categories[0]}</td>
