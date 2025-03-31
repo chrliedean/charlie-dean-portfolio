@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { getYear } from '$lib/utils.js';
-    import { updateWindow } from '$lib/stores/windows';
+    import { updateWindow } from '$lib/state/windowState.svelte';
     import { page } from '$app/stores';
     
     // Accept data from both props and the page store
@@ -22,9 +22,10 @@
         // Update the window with dynamic metadata
         updateWindow(window.location.pathname, {
           title: pageData.meta.title || 'Portfolio Post',
-          icon: pageData.meta.icon || 'document',
+          icon: pageData.meta.icon || 'folder',
           // Also update the data property so it's available if the window is reused
-          data: pageData
+          data: pageData,
+          style: pageData.meta.style || 'reader',
         });
         console.log("Window updated with title:", pageData.meta.title);
       } else {

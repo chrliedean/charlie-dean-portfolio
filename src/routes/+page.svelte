@@ -1,7 +1,8 @@
 <script context="module">
   export const windowMeta = {
     id: "home",
-    title: "🏠 Home",
+    title: "Home",
+    icon: "home",
     route: "/",
     defaultSize: { width: 800, height: 600 },
     style: "reader",

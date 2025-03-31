@@ -12,7 +12,7 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
-  import { updateWindow } from "$lib/stores/windows";
+  import { updateWindow } from "$lib/state/windowState.svelte";
   import Icon from "$lib/components/Icon.svelte";
   const params = $page.url.searchParams;
   let inputUrl = params.get("url") || "";

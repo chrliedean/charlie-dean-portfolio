@@ -27,8 +27,13 @@ export interface WindowEntry extends WindowMeta {
   resizable?: boolean;
   minimized?: boolean;
   data?: unknown;
-  ref?: SvelteComponent | null;
+  ref?: HTMLDivElement | null;
   xyorigin?: WindowPosition;
+  style?: string;
+  published?: boolean;
+  date?: string;
+  medium?: string;
+  categories?: string[];
 }
 
 export type WindowUpdateEvent = CustomEvent<{

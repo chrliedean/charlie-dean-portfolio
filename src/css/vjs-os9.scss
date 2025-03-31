@@ -1,0 +1,160 @@
+@use "colors" as *;
+.vjs-os9 {
+  font-family: "Geneva", sans-serif;
+}
+
+.vjs-os9 .vjs-time-tooltip {
+  font-family: "Geneva", sans-serif;
+}
+
+.vjs-os9:hover .vjs-big-play-button {
+  background-color: $g300;
+  border-color: $g900;
+}
+
+.vjs-os9 .vjs-big-play-button {
+  width: 2em;
+  color: $g900;
+  border-radius: 0;
+  border: $line-width solid $g900;
+  background-color: $g300;
+  box-shadow: inset ($line-width * -2)
+      ($line-width * -2) 0 0 $g600,
+    inset ($line-width * 2) ($line-width * 2) 0 0
+      $g200;
+}
+
+.vjs-os9 .vjs-big-play-button:active {
+  background-color: $g800;
+  box-shadow: inset ($line-width * -2)
+      ($line-width * -2) 0 0 $g600,
+    inset ($line-width * 2) ($line-width * 2) 0 0
+      $g900;
+}
+
+.vjs-os9 .vjs-big-play-button:focus {
+  background-color: $g800;
+}
+
+.vjs-os9 .vjs-control-bar {
+  background-color: $g500;
+  opacity: 1;
+  color: $g900;
+}
+
+.vjs-os9 .vjs-progress-holder {
+  height: 15px;
+  background: $g500;
+  border: 1px solid $g900;
+  box-shadow: inset $line-width $line-width 0 0
+      $g700,
+    inset ($line-width * -1) ($line-width * -1) 0 0
+      $g100;
+}
+
+.vjs-os9 .vjs-play-progress {
+  background-image: linear-gradient(to bottom, #262673, #e5e5f2, #262673);
+  opacity: 1;
+  border-right: $line-width solid $g900;
+  box-shadow: 1px 0px 3px 0px #000000c6;
+}
+.vjs-os9 .vjs-picture-in-picture-control {
+  display: none;
+}
+
+.vjs-os9 .vjs-slider-bar::before {
+  display: none;
+}
+
+.vjs-os9 .vjs-load-progress div {
+  background: $g700 !important;
+  opacity: 0.1;
+}
+
+.vjs-os9 .vjs-time-tooltip {
+  opacity: 1;
+  background: $g400;
+  border: $line-width solid $g900;
+  border-radius: 0;
+  color: $g900;
+  top: -4em;
+}
+
+.vjs-os9 .vjs-control {
+  box-shadow: inset ($line-width * -2)
+      ($line-width * -2) 0 0 $g700,
+    inset ($line-width * 2) ($line-width * 2) 0 0
+      $g100;
+  outline: $line-width solid $g900;
+}
+
+.vjs-os9 .vjs-button:active {
+  background-color: $g800;
+  box-shadow: inset ($line-width * -2)
+      ($line-width * -2) 0 0 $g600,
+    inset ($line-width * 2) ($line-width * 2) 0 0
+      $g900;
+  color: #fff;
+}
+
+.vjs-os9 .vjs-control:focus {
+  outline: $line-width solid var(--_colors---azul);
+}
+
+.vjs-os9 .vjs-mute-control .vjs-icon-placeholder:before {
+  content: "" !important;
+}
+
+.vjs-os9 .vjs-mute-control {
+  background-image: url(/img/icns/sound.png);
+  background-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.vjs-os9 .vjs-volume-control {
+  transition: 0s !important;
+  outline: none;
+  background: $g400;
+  border: $line-width solid $g900;
+  margin-bottom: 20px;
+  box-shadow: $line-width $line-width 0 0
+      $g900,
+    inset ($line-width * -1) ($line-width * -1) 0 0
+      $g600,
+    inset $line-width $line-width 0 0 $g200;
+}
+
+.vjs-os9 .vjs-volume-vertical {
+  bottom: calc(8em - 3px);
+}
+
+.vjs-os9 .vjs-volume-bar {
+  width: 6px;
+  border: $line-width solid $g900;
+  border-radius: 3px;
+  height: auto;
+  margin: 0.5em auto;
+}
+
+.vjs-os9 .vjs-volume-level::before {
+  content: "";
+  background: url(/img/ui/slider.png);
+  image-rendering: pixelated;
+  background-size: cover;
+  background-position: center;
+  width: 15px;
+  height: 12px;
+  margin: 0 auto;
+  left: -5.5px;
+}
+
+.vjs-os9 .vjs-volume-tooltip {
+  display: none !important;
+}
+
+.vjs-os9 .vjs-control:focus:before,
+.vjs-os9 .vjs-control:hover:before,
+.vjs-os9 .vjs-control:focus {
+  text-shadow: none;
+}

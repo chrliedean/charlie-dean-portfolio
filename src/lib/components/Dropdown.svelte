@@ -1,20 +1,27 @@
 <script lang="ts" context="module">
-  // Create stores at the module level so they're shared across all instances
-  import { writable } from "svelte/store";
-  
-  // Define the global stores outside component to ensure they exist for all instances
-  export const activeDropdownStore = writable<string | null>(null);
-  export const globalDropdownState = writable<{
-    dragging: boolean;
-    originDropdownId: string | null;
-    currentSelectedItem: HTMLElement | null;
-    lastSoundTime: number;
-  }>({
-    dragging: false,
-    originDropdownId: null,
-    currentSelectedItem: null,
-    lastSoundTime: 0
-  });
+  // Create global state at the module level so it's shared across all instances
+  let dragging = $state(false);
+  let originDropdownId = $state<string | null>(null);
+  let currentSelectedItem = $state<HTMLElement | null>(null);
+  let lastSoundTime = $state(0);
+  let lastHoveredItem = $state<HTMLElement | null>(null);
+  let activeDropdownId = $state<string | null>(null);
+
+  // Export the state object for use in components
+  export const globalDropdownState = {
+    get dragging() { return dragging; },
+    set dragging(value: boolean) { dragging = value; },
+    get originDropdownId() { return originDropdownId; },
+    set originDropdownId(value: string | null) { originDropdownId = value; },
+    get currentSelectedItem() { return currentSelectedItem; },
+    set currentSelectedItem(value: HTMLElement | null) { currentSelectedItem = value; },
+    get lastSoundTime() { return lastSoundTime; },
+    set lastSoundTime(value: number) { lastSoundTime = value; },
+    get lastHoveredItem() { return lastHoveredItem; },
+    set lastHoveredItem(value: HTMLElement | null) { lastHoveredItem = value; },
+    get activeDropdownId() { return activeDropdownId; },
+    set activeDropdownId(value: string | null) { activeDropdownId = value; }
+  };
 </script>
 
 <script lang="ts">
@@ -23,44 +30,44 @@
   import { soundCommand } from "./SoundEffects.svelte";
   import { get } from "svelte/store";
 
-  // Make stores available via context for any child components
-  setContext('activeDropdown', activeDropdownStore);
+  // Make global state available via context for any child components
   setContext('globalDropdownState', globalDropdownState);
 
   // Local state
-  let isOpen = false;
+  let isOpen = $state(false);
   let container: HTMLDivElement;
   let dropdownContent: HTMLDivElement;
   let toggleElement: HTMLElement;
-  let justOpened = false;
+  let justOpened = $state(false);
   
   // Props
-  export let className = "";
-  export let id: string = crypto.randomUUID();
+  const { className = "", id = crypto.randomUUID() } = $props<{
+    className?: string;
+    id?: string;
+  }>();
   
   // Subscribe to active dropdown changes
-  const unsubscribe = activeDropdownStore.subscribe((activeId: string | null) => {
-    if (activeId !== null && activeId !== id && isOpen) {
+  $effect(() => {
+    if (globalDropdownState.activeDropdownId !== null && globalDropdownState.activeDropdownId !== id && isOpen) {
       isOpen = false;
     }
   });
 
   // Play sound only if enough time has passed (debounce)
   function playMenuItemSound() {
-    const state = get(globalDropdownState);
     const now = Date.now();
     
     // Only play sound at most every 50ms
-    if (now - state.lastSoundTime > 50) {
+    if (now - globalDropdownState.lastSoundTime > 50) {
       soundCommand.set("mnui");
-      globalDropdownState.update(s => ({ ...s, lastSoundTime: now }));
+      globalDropdownState.lastSoundTime = now;
     }
   }
 
   function openMenu() {
     if (!isOpen) {
       isOpen = true;
-      activeDropdownStore.set(id);
+      globalDropdownState.activeDropdownId = id;
       justOpened = true;
       setTimeout(() => { justOpened = false; }, 100);
       soundCommand.set("mnuo");
@@ -70,9 +77,8 @@
   function closeMenu() {
     if (isOpen) {
       isOpen = false;
-      const currentActive = get(activeDropdownStore);
-      if (currentActive === id) {
-        activeDropdownStore.set(null);
+      if (globalDropdownState.activeDropdownId === id) {
+        globalDropdownState.activeDropdownId = null;
       }
       soundCommand.set("mnuc");
     }
@@ -96,12 +102,9 @@
       }
       
       // Set global state
-      globalDropdownState.update(s => ({
-        ...s,
-        dragging: true,
-        originDropdownId: id,
-        currentSelectedItem: null
-      }));
+      globalDropdownState.dragging = true;
+      globalDropdownState.originDropdownId = id;
+      globalDropdownState.currentSelectedItem = null;
       
       // Add global listeners
       document.addEventListener("mousemove", handleGlobalMouseMove);
@@ -110,8 +113,7 @@
   }
 
   function handleGlobalMouseMove(e: MouseEvent) {
-    const state = get(globalDropdownState);
-    if (!state.dragging) return;
+    if (!globalDropdownState.dragging) return;
     
     // Find all open dropdowns
     const dropdowns = document.querySelectorAll('.dropdown-content');
@@ -141,34 +143,32 @@
           foundItem = true;
           
           // Only play sound if selection changed
-          if (state.currentSelectedItem !== item) {
+          if (globalDropdownState.currentSelectedItem !== item) {
             playMenuItemSound();
           }
           
           // Update selection
           item.classList.add('selected');
-          globalDropdownState.update(s => ({ ...s, currentSelectedItem: item as HTMLElement }));
+          globalDropdownState.currentSelectedItem = item as HTMLElement;
         }
       });
     });
     
     // If no item found, clear selection
     if (!foundItem) {
-      globalDropdownState.update(s => ({ ...s, currentSelectedItem: null }));
+      globalDropdownState.currentSelectedItem = null;
     }
   }
 
   function handleGlobalMouseUp(e: MouseEvent) {
     document.removeEventListener("mousemove", handleGlobalMouseMove);
     
-    const state = get(globalDropdownState);
-    
     // If we have a selected item
-    if (state.currentSelectedItem) {
-      (state.currentSelectedItem as HTMLElement).click();
+    if (globalDropdownState.currentSelectedItem) {
+      (globalDropdownState.currentSelectedItem as HTMLElement).click();
     }
     // Click was in the toggle that started the drag, and no item selected
-    else if (state.originDropdownId === id && toggleElement.contains(e.target as Node)) {
+    else if (globalDropdownState.originDropdownId === id && toggleElement.contains(e.target as Node)) {
       // Don't close if we just opened it
       if (!justOpened && isOpen) {
         closeMenu();
@@ -176,18 +176,14 @@
     }
     
     // Reset drag state
-    globalDropdownState.update(s => ({
-      ...s,
-      dragging: false,
-      originDropdownId: null,
-      currentSelectedItem: null
-    }));
+    globalDropdownState.dragging = false;
+    globalDropdownState.originDropdownId = null;
+    globalDropdownState.currentSelectedItem = null;
   }
 
   function handleMenuHover(e: MouseEvent) {
     // If we're dragging, this is handled by global handler
-    const state = get(globalDropdownState);
-    if (state.dragging) return;
+    if (globalDropdownState.dragging) return;
     
     const target = e.target as HTMLElement;
     if (!target.classList.contains('dropdown-link')) return;
@@ -195,18 +191,26 @@
     // Make sure dropdownContent exists before using it
     if (!dropdownContent) return;
     
+    // Only play sound if we're hovering over a different item
+    if (globalDropdownState.lastHoveredItem !== target) {
+      playMenuItemSound();
+      globalDropdownState.lastHoveredItem = target;
+    }
+    
     // Clear all selections in this dropdown
     const allItems = dropdownContent.querySelectorAll('.dropdown-link');
     allItems.forEach(item => item.classList.remove('selected'));
     
     // Add selection to current item
     target.classList.add('selected');
-    playMenuItemSound();
   }
 
   function handleMouseEnter() {
-    const activeId = get(activeDropdownStore);
-    if (activeId !== null && activeId !== id) {
+    // If there's an active dropdown and it's not this one
+    if (globalDropdownState.activeDropdownId !== null && globalDropdownState.activeDropdownId !== id) {
+      // Close the previous dropdown by setting its ID to null
+      globalDropdownState.activeDropdownId = null;
+      // Open this dropdown
       openMenu();
     }
   }
@@ -231,7 +235,6 @@
       document.removeEventListener("click", handleClickOutside);
       document.removeEventListener("mousemove", handleGlobalMouseMove);
       document.removeEventListener("mouseup", handleGlobalMouseUp);
-      unsubscribe();
     });
   }
 </script>
@@ -243,6 +246,7 @@
   on:mouseenter={handleMouseEnter}
   on:mousedown={handleMouseDown}
   role="presentation"
+  data-dropdown-id={id}
 >
   <div
     bind:this={toggleElement}

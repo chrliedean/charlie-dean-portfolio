@@ -1,25 +1,5 @@
-@use "sass:list";
-// Variables
-$line-width: 1px;
-
-$g100: #f1f1f1;
-$g200: #eee;
-$g300: #ddd;
-$g400: #ccc;
-$g450: #c5c5c5;
-$g500: #bbb;
-$g600: #999;
-$g700: grey;
-$g800: #666;
-$g900: #262626;
-
-$negative-line-width: -1px;
-$double-line-width: 2px;
-$negative-double-line-width: -2px;
-$colors-azul: #339;
-$colors-lavender: #ccccff;
-$colors-beige: #e8e8df;
-$dropdown: 0;
+@use "sass:string";
+@use "colors" as *;
 
 @mixin bevel(
   $topcolor-inner: $g200, 
@@ -51,7 +31,7 @@ $dropdown: 0;
     }
     
     @if $shadow-string != "" {
-      box-shadow: unquote($shadow-string);
+      box-shadow: string.unquote($shadow-string);
     }
 }
 
@@ -181,8 +161,21 @@ input {
   padding: 10px;
   font-family: "FindersKeepers", Arial, sans-serif;
   @include bevel();
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  position: relative;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  -webkit-will-change: transform;
   
-
   p {
     font-size: 24px;
     line-height: 30px;
@@ -315,7 +308,18 @@ input {
     // Previously centered; change to flex-start if vertical space is limited
     justify-content: flex-start;
     background-color: $g300;
-    font-family: Georgia, "Times New Roman", Times, serif;
+    font-family: "EB Garamond", serif;
+  }
+
+  &.dark {
+    .window-body {
+      background-color: $g900;
+      color: $g100;
+    }
+
+    hgroup {
+      border-color: $g100;
+    }
   }
 
   article {
@@ -329,7 +333,9 @@ input {
     hgroup {
       max-width: 600px;
       margin: 0 auto;
-
+      border-bottom: $line-width solid $g900;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
       p {
         font-family: "FindersKeepers", sans-serif;
         font-size: 30px;
@@ -340,7 +346,7 @@ input {
       p {
         font-size: 20px;
         max-width: 600px;
-        margin: 0 auto 20px;
+        margin: 10px auto 20px;
       }
     }
   }
@@ -350,6 +356,15 @@ input {
     margin: 0;
   }
 
+  .max400 {
+    max-width: 600px;
+    margin: 0 auto;
+    img {
+      width: 100%;
+      max-width: 400px;
+    }
+  }
+
   .vjs-os9 {
     overflow: hidden;
     border-radius: 5px !important;
@@ -357,7 +372,7 @@ input {
 }
 
 article {
-  picture {
+  figure {
     img {
       user-select: none;
       -webkit-user-select: none;
@@ -366,12 +381,21 @@ article {
       border-radius: 5px;
       margin-bottom: 10px;
     }
+
+    figcaption {
+      margin: -5px 5px 14px 0;
+      font-family: "Apple Garamond Italic", serif;
+      font-style: italic;
+      text-align: right;
+      font-size: 18px;
+      font-style: normal;
+      color: $g800;
+      
+    }
   }
 }
 
-.max400 {
-  max-width: 400px;
-}
+
 
 .paragraph {
   margin: 5px 0;
@@ -549,6 +573,23 @@ article {
     opacity: 0.5;
   }
 
+  .window-body {
+    &::-webkit-scrollbar-track {
+      background-color: $g200;
+      border-color: #dadada;
+      box-shadow: none;
+    }
+    &::-webkit-scrollbar-thumb {
+      display: none;
+    }
+    &::-webkit-scrollbar-button {
+      border-color: #dadada;
+      background-color: $g200;
+      box-shadow: none;
+      background-image: none !important;
+    }
+  }
+
   .browser {
     iframe {
       &::-webkit-scrollbar-track {
@@ -706,9 +747,7 @@ html {
   font-size: 3em;
 }
 
-hgroup {
-  margin-top: 0;
-}
+
 
 .titlebar-button-minimize {
   aspect-ratio: auto;
@@ -946,7 +985,7 @@ input {
 }
 
 .dropdown-link {
-  padding: 0;
+  padding: 0px 5px;
 
   &:hover {
     background-color: $colors-azul;
@@ -1001,6 +1040,28 @@ input {
   src: url("/fonts/AppleGaramond-Light.ttf") format("truetype");
   font-weight: 300;
   font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Apple Garamond Italic";
+  src: url("/fonts/AppleGaramond-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "EB Garamond";
+  src: url("/fonts/EBGaramond-VariableFont_wght.ttf") format("truetype");
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "EB Garamond Italic";
+  src: url("/fonts/EBGaramond-Italic-VariableFont_wght.ttf") format("truetype");
+  font-style: italic;
   font-display: swap;
 }
 

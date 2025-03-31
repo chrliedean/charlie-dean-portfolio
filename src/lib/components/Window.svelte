@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-  let highestZIndex = 1;
+  let highestZIndex = 100;
 </script>
 
 <script lang="ts">
@@ -8,6 +8,7 @@
   import { soundCommand } from "./SoundEffects.svelte";
   import { getContext, setContext } from "svelte";
   import Icon from "./Icon.svelte";
+  import { focusWindow } from "$lib/state/windowState.svelte";
 
   export let id: string;
   export let title = "";
@@ -24,6 +25,7 @@
   // New exported props for persisted size/position.
   export let currentSize: { width: number; height: number } | null = null;
   export let currentPosition: { x: number; y: number } | null = null;
+  export let ref: HTMLDivElement | null = null;
 
   let closing = false;
   let opening = false;
@@ -33,6 +35,11 @@
   let overlayEl: HTMLDivElement;
   let showOverlay = false;
 
+  // Update ref whenever windowEl changes
+  $: if (windowEl) {
+    ref = windowEl;
+  }
+
   let offset = { x: 0, y: 0 };
   let isDragging = false;
   let dragOccurred = false;
@@ -41,6 +48,11 @@
   const dispatch = createEventDispatcher();
 
   export let closeWindow: (id: string) => void;
+
+  let zIndex = 0;
+  
+  // Explicitly track which event handlers are attached
+  let eventHandlersAttached = false;
 
   // ---------------------------
   // Overlay Animation Functions
@@ -153,16 +165,20 @@
   }
 
   onMount(() => {
-    console.log(`Window mounted for ${id}`, {
+    // Set the ref to the windowEl
+    ref = windowEl;
+    
+    console.log(`🪟 Window mounted for ${id}`, {
       hasComponent: !!$$slots.default,
-      data: $$props.data
+      data: $$props.data,
+      hasRef: !!ref,
+      refElement: ref
     });
-    const cleanup = () => {
-      document.removeEventListener("mousedown", handleDocumentClick);
-      window.removeEventListener("resize", clampPositionToViewport);
-      windowEl.removeEventListener("mousedown", bringToFront);
-    };
-
+    
+    // Start with a proper z-index
+    zIndex = ++highestZIndex;
+    windowEl.style.zIndex = `${zIndex}`;
+    
     (async () => {
       const vw = window.innerWidth - padding * 2;
       const vh = window.innerHeight - padding * 2;
@@ -188,70 +204,162 @@
         await centerWindow();
       }
 
-      windowEl.addEventListener("mousedown", bringToFront);
-      document.addEventListener("mousedown", handleDocumentClick);
-      window.addEventListener("resize", clampPositionToViewport);
-
+      // Setup global event handlers
+      setupEventHandlers();
+      
+      // Setup direct DOM event handlers
+      setupDirectEventHandlers();
+      
       showOverlay = true;
       await tick();
       await animateOverlayOpen();
     })();
-    return cleanup;
+    
+    return () => {
+      console.log(`🧹 Cleaning up window: ${id}`);
+      removeEventHandlers();
+      // Clear the ref when unmounting
+      ref = null;
+    };
   });
-
   
-
-  function handleTitleMouseDown(event: MouseEvent) {
-    if ((event.target as HTMLElement).closest(".titlebar-button")) return;
-    startDragging(event);
+  function setupDirectEventHandlers() {
+    if (windowEl) {
+      windowEl.addEventListener('mousedown', handleWindowMouseDown as EventListener);
+      windowEl.querySelector('.titlebar')?.addEventListener('mousedown', handleTitleBarMouseDown as EventListener);
+      windowEl.querySelector('.resize-handle')?.addEventListener('mousedown', handleResizeMouseDown as EventListener);
+    }
   }
 
-  const handleDocumentClick = (event: MouseEvent | TouchEvent) => {
-    if (windowEl.contains(event.target as Node)) {
-      windowEl.classList.add("active");
-      windowEl.classList.remove("inactive");
-    } else {
-      windowEl.classList.remove("active");
-      windowEl.classList.add("inactive");
+  function setupEventHandlers() {
+    if (eventHandlersAttached) return;
+    
+    // Make sure we're not attaching handlers multiple times
+    eventHandlersAttached = true;
+    
+    // Handle clicks outside the window
+    //document.addEventListener("mousedown", handleGlobalMouseDown);
+    
+    // Handle window resize
+    window.addEventListener("resize", clampPositionToViewport);
+  }
+  
+  function removeEventHandlers() {
+    if (!eventHandlersAttached) return;
+    
+    eventHandlersAttached = false;
+    
+    //document.removeEventListener("mousedown", handleGlobalMouseDown);
+    window.removeEventListener("resize", clampPositionToViewport);
+    
+    // Make sure any active drag operations are cleaned up
+    window.removeEventListener("mousemove", handleMouseMove);
+    window.removeEventListener("mouseup", handleMouseUp);
+    window.removeEventListener("mousemove", handleResizing);
+    window.removeEventListener("mouseup", handleResizeMouseUp);
+    
+    // Clean up direct DOM event listeners
+    if (windowEl) {
+      windowEl.removeEventListener('mousedown', handleWindowMouseDown as EventListener);
+      windowEl.querySelector('.titlebar')?.removeEventListener('mousedown', handleTitleBarMouseDown as EventListener);
+      windowEl.querySelector('.resize-handle')?.removeEventListener('mousedown', handleResizeMouseDown as EventListener);
     }
-  };
+  }
+
+  // Set window as inactive
+  export function makeInactive() {
+    windowEl.classList.remove("active");
+    windowEl.classList.add("inactive");
+  }
+
+  // Safe function to bring window to front
+  function bringToFront() {
+    zIndex = ++highestZIndex;
+    windowEl.style.zIndex = `${zIndex}`;
+    windowEl.classList.add("active");
+    windowEl.classList.remove("inactive");
+  }
+
+  // Handle window focus
+  function handleWindowMouseDown(event: MouseEvent) {
+    // Don't process if we're dragging or resizing
+    if (isDragging || isResizing) return;
+    
+    // Don't process clicks on buttons
+    if ((event.target as HTMLElement).closest(".titlebar-button")) return;
+    
+    // Don't process clicks on links
+    if ((event.target as HTMLElement).closest("a")) return;
+    
+    // Don't process if window is already focused
+    if (windowEl.classList.contains("active")) return;
+    
+    // Focus the window without triggering scroll reset
+    focusWindow(id);
+  }
+
+  // Title bar drag handler
+  function handleTitleBarMouseDown(event: MouseEvent) {
+    // Don't process clicks on buttons
+    if ((event.target as HTMLElement).closest(".titlebar-button")) return;
+    
+    // First focus the window
+    focusWindow(id);
+    
+    // Then start dragging
+    startDragging(event);
+    
+    // Make sure the event doesn't propagate up
+    event.stopPropagation();
+  }
 
   function startDragging(event: MouseEvent) {
     if (event.button !== 0) return;
 
     soundCommand.set("drag-start");
+    
     isDragging = true;
     dragOccurred = false;
+    
     const rect = windowEl.getBoundingClientRect();
     offset = {
       x: event.clientX - rect.left,
       y: event.clientY - rect.top,
     };
+    
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
   }
 
   function handleMouseMove(event: MouseEvent) {
     if (!isDragging) return;
+    
     dragOccurred = true;
+    
     const winWidth = windowEl.offsetWidth;
     const winHeight = windowEl.offsetHeight;
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
+    
     let x = event.clientX - offset.x;
     let y = event.clientY - offset.y;
+    
     x = Math.max(0, Math.min(x, screenWidth - winWidth));
     y = Math.max(topPadding, Math.min(y, screenHeight - winHeight));
+    
     windowEl.style.left = `${x}px`;
     windowEl.style.top = `${y}px`;
   }
 
   function handleMouseUp() {
-    soundCommand.set("drag-end");
-    isDragging = false;
+    if (isDragging) {
+      soundCommand.set("drag-end");
+      isDragging = false;
+      updateWindowState();
+    }
+    
     window.removeEventListener("mousemove", handleMouseMove);
     window.removeEventListener("mouseup", handleMouseUp);
-    updateWindowState();
   }
 
   function clampPositionToViewport() {
@@ -274,15 +382,24 @@
 
   function handleResizeMouseDown(event: MouseEvent) {
     if (event.button !== 0) return;
+    
+    // First focus the window
+    bringToFront();
+    
     isResizing = true;
     resizeStart = { x: event.clientX, y: event.clientY };
     startSize = {
       width: windowEl.offsetWidth,
       height: windowEl.offsetHeight,
     };
+    
     window.addEventListener("mousemove", handleResizing);
     window.addEventListener("mouseup", handleResizeMouseUp);
+    
     soundCommand.set("drag-start");
+    
+    // Stop propagation to prevent the main window's mousedown handler
+    event.stopPropagation();
   }
 
   function handleResizing(event: MouseEvent ) {
@@ -317,18 +434,10 @@
     dispatch("update", { id, currentSize, currentPosition });
   }
 
-  // Bring this window to the front.
-  function bringToFront() {
-    highestZIndex++;
-    windowEl.style.zIndex = `${highestZIndex}`;
-    windowEl.classList.add("active");
-    windowEl.classList.remove("inactive");
-    dispatch("focus", { id });
-  }
-
-  function minimizeWindow(event: MouseEvent | TouchEvent ) {
+  function minimizeWindow(event: MouseEvent | TouchEvent) {
     event.preventDefault();
     event.stopPropagation();
+    
     if (minimized) {
       windowEl.classList.remove("minimized");
       minimized = false;
@@ -338,11 +447,6 @@
       minimized = true;
       soundCommand.set("wcol");
     }
-  }
-
-  export function focus() {
-    windowEl.classList.remove("minimized");
-    bringToFront();
   }
 
   // ---------------------------
@@ -365,13 +469,14 @@
 {#if showOverlay}
   <div bind:this={overlayEl} class="animate-overlay"></div>
 {/if}
+
 <div
   bind:this={windowEl}
   class="window {style}"
   class:resizable
   role="presentation"
 >
-  <div class="titlebar" onmousedown={handleTitleMouseDown} role="presentation">
+  <div class="titlebar" role="presentation">
     <div class="w-layout-hflex title-bar-flexbox">
       <div
         class="titlebar-button"
@@ -413,7 +518,6 @@
   </div>
   <div
     class="resize-handle"
-    onmousedown={handleResizeMouseDown}
     role="presentation"
   ></div>
 </div>
@@ -434,4 +538,6 @@
     position: relative;
     background-color: red;
   }
+
+
 </style>

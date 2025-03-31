@@ -1,10 +1,11 @@
 <!-- /+layout.svelte -->
 <script>
-    import '../webflow.css';
-    import '../app.scss';
+    import '../css/webflow.css';
+    import '../css/app.scss';
 
     import MenuBar from '$lib/components/MenuBar.svelte';
     import WindowManager from '$lib/components/WindowManager.svelte';
+    import WindowStatePersistence from '$lib/components/WindowStatePersistence.svelte';
     import SoundEffects from '$lib/components/SoundEffects.svelte';
     import  WindowEntry  from '$lib/components/WindowManager.svelte';
     import Desktop from '$lib/components/Desktop.svelte';
@@ -21,6 +22,7 @@
 </script>
 <SoundEffects />
 <section class="section">
+    <WindowStatePersistence />
     <MenuBar />
     <Desktop />
     <WindowManager />

@@ -4,8 +4,12 @@ export const windowMeta= {
     title: 'Contact',
     route: '/contact',
     resizable: false,
+    icon: 'mail',
 };
 </script>
+<svelte:head>
+    <title>Contact</title>
+</svelte:head>
 <p class="paragraph">
     charlie@charliedean.com
 </p>

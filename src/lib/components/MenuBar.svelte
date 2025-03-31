@@ -1,19 +1,33 @@
 <script lang="ts">
   import { onMount, onDestroy, setContext } from "svelte";
   import SmartLink from "./SmartLink.svelte";
-  import { focusedWindow } from "$lib/stores/windows";
-  import { openWindows } from "$lib/stores/windows";
+  import { getFocusedWindow, getWindows } from "$lib/state/windowState.svelte";
   import Dropdown from "./Dropdown.svelte";
   import Icon from "./Icon.svelte";
   import { writable } from "svelte/store";
   import { browser } from "$app/environment";
 
   // Create a global dropdown manager store and share it via context
-  const activeDropdownStore = writable<string | null>(null);
-  setContext('activeDropdown', activeDropdownStore);
+  const globalDropdownState = writable<{
+    dragging: boolean;
+    originDropdownId: string | null;
+    currentSelectedItem: HTMLElement | null;
+    lastSoundTime: number;
+    lastHoveredItem: HTMLElement | null;
+  }>({
+    dragging: false,
+    originDropdownId: null,
+    currentSelectedItem: null,
+    lastSoundTime: 0,
+    lastHoveredItem: null
+  });
+  setContext('globalDropdownState', globalDropdownState);
 
+  // State
   let time = $state("");
   let isFullscreen = $state(false);
+  let activeMenuItem = $state<string | null>(null);
+
   // Function to get time in 12-hour format
   function updateTime() {
     const now = new Date();
@@ -53,23 +67,86 @@
     }
   }
 
+  // Function to handle keyboard navigation
+  function handleKeyDown(e: KeyboardEvent) {
+    if (!activeMenuItem) return;
+
+    const menuItems = document.querySelectorAll('.menubar-item');
+    const currentIndex = Array.from(menuItems).findIndex(item => item.id === activeMenuItem);
+
+    switch (e.key) {
+      case 'ArrowLeft':
+        e.preventDefault();
+        const prevIndex = (currentIndex - 1 + menuItems.length) % menuItems.length;
+        (menuItems[prevIndex] as HTMLElement).focus();
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        const nextIndex = (currentIndex + 1) % menuItems.length;
+        (menuItems[nextIndex] as HTMLElement).focus();
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        const currentItem = menuItems[currentIndex];
+        const dropdownToggle = currentItem.querySelector('.dropdown-toggle');
+        if (dropdownToggle) {
+          (dropdownToggle as HTMLElement).click();
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        if (activeMenuItem) {
+          const currentItem = document.getElementById(activeMenuItem);
+          if (currentItem) {
+            currentItem.blur();
+            activeMenuItem = null;
+          }
+        }
+        break;
+    }
+  }
+
+  // Function to handle menu item focus
+  function handleMenuItemFocus(e: FocusEvent) {
+    const target = e.target as HTMLElement;
+    const menuItem = target.closest('.menubar-item');
+    if (menuItem) {
+      activeMenuItem = menuItem.id;
+    }
+  }
+
   onMount(() => {
     if (browser) {
       document.addEventListener('fullscreenchange', () => {
         isFullscreen = !!document.fullscreenElement;
       });
+      document.addEventListener('keydown', handleKeyDown);
+    }
+  });
+
+  onDestroy(() => {
+    if (browser) {
+      document.removeEventListener('keydown', handleKeyDown);
     }
   });
 </script>
 
 <!-- Made the menubar a div instead of nav to avoid accessibility warnings -->
-<div class="menubar" role="menubar" aria-label="Main Menu">
+<div 
+  class="menubar" 
+  role="menubar" 
+  aria-label="Main Menu" 
+  onfocusin={handleMenuItemFocus}
+>
   <div class="menubar-left">
     <Dropdown className="menubar-item logo w-dropdown" id="app-menu">
       <div 
         class="dropdown-toggle w-dropdown-toggle" 
         slot="toggle"
         onclick={preventEventBubbling}
+        role="menuitem"
+        aria-haspopup="true"
+        aria-expanded="false"
       >
         <div class="menubar-item-contents"></div>
       </div>
@@ -95,11 +172,12 @@
 
         <span class="dropdown-link w-dropdown-link" role="menuitem" onclick={toggleFullscreen}>
           {#if isFullscreen}
-          Extit fullscreen
+          Exit fullscreen
           {:else}
           Enter fullscreen
           {/if}
         </span>
+      </nav>
     </Dropdown>
     
     <!-- Convert direct links to dropdowns with one item -->
@@ -179,19 +257,20 @@
         onclick={preventEventBubbling}
       >
         <div class="menubar-item-contents">
-          {#if $focusedWindow}
-            {#if $focusedWindow.icon}
-              <Icon name={$focusedWindow.icon} size="1em" />
+          {#if getFocusedWindow()}
+            {@const focusedWindow = getFocusedWindow()!}
+            {#if focusedWindow.icon}
+              <Icon name={focusedWindow.icon} size="1em" />
             {/if}
-            {$focusedWindow.title}
+            {focusedWindow.title || 'Untitled Window'}
           {:else}
-            Default Title
+            No Windows Open
           {/if}
         </div>
       </div>
 
       <nav class="dropdown-menu w-dropdown-list" role="menu">
-        {#each $openWindows as win (win.id)}
+        {#each getWindows() as win (win.id)}
           <SmartLink href={win.route} classname="dropdown-link w-dropdown-link">
             {#if win.icon}
               <Icon name={win.icon} size="1em" />

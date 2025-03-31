@@ -1,6 +1,6 @@
 // File: /routes/api/portfolio-files/+server.ts
 import { json } from '@sveltejs/kit';
-import type { WindowEntry } from '$lib/types/WindowEntry';
+import type { WindowEntry } from '$lib/types/window';
 
 export async function GET() {
   const posts = await getPosts();
