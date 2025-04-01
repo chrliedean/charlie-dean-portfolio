@@ -1,0 +1,317 @@
+{
+  "images": [
+    {
+      "path": "/img/Menu-bar-resizer.png",
+      "alt": "Menu-bar-resizer",
+      "filename": "Menu-bar-resizer.png"
+    },
+    {
+      "path": "/img/Stickies.png",
+      "alt": "Stickies",
+      "filename": "Stickies.png"
+    },
+    {
+      "path": "/img/arrow-down.png",
+      "alt": "arrow-down",
+      "filename": "arrow-down.png"
+    },
+    {
+      "path": "/img/arrow-left.png",
+      "alt": "arrow-left",
+      "filename": "arrow-left.png"
+    },
+    {
+      "path": "/img/arrow-right.png",
+      "alt": "arrow-right",
+      "filename": "arrow-right.png"
+    },
+    {
+      "path": "/img/arrow-up.png",
+      "alt": "arrow-up",
+      "filename": "arrow-up.png"
+    },
+    {
+      "path": "/img/donotuse.avif",
+      "alt": "donotuse",
+      "filename": "donotuse.avif"
+    },
+    {
+      "path": "/img/icns/back.png",
+      "alt": "back",
+      "filename": "back.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/browseinternet.png",
+      "alt": "browseinternet",
+      "filename": "browseinternet.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/charlie.png",
+      "alt": "charlie",
+      "filename": "charlie.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/clip.png",
+      "alt": "clip",
+      "filename": "clip.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/controls.png",
+      "alt": "controls",
+      "filename": "controls.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/document.png",
+      "alt": "document",
+      "filename": "document.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/folder.png",
+      "alt": "folder",
+      "filename": "folder.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/forward.png",
+      "alt": "forward",
+      "filename": "forward.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/help.png",
+      "alt": "help",
+      "filename": "help.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/home.png",
+      "alt": "home",
+      "filename": "home.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/ie4.png",
+      "alt": "ie4",
+      "filename": "ie4.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/mail.png",
+      "alt": "mail",
+      "filename": "mail.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/movie.png",
+      "alt": "movie",
+      "filename": "movie.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/music.png",
+      "alt": "music",
+      "filename": "music.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/reload.png",
+      "alt": "reload",
+      "filename": "reload.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/sound.png",
+      "alt": "sound",
+      "filename": "sound.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/tools.png",
+      "alt": "tools",
+      "filename": "tools.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/users.png",
+      "alt": "users",
+      "filename": "users.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/icns/website.png",
+      "alt": "website",
+      "filename": "website.png",
+      "folder": "/icns"
+    },
+    {
+      "path": "/img/pages/charlie.jpg",
+      "alt": "charlie",
+      "filename": "charlie.jpg",
+      "folder": "/pages"
+    },
+    {
+      "path": "/img/portfolio/im-only-sleeping/im-only-sleeping-01.avif",
+      "alt": "im-only-sleeping-01",
+      "filename": "im-only-sleeping-01.avif",
+      "folder": "/portfolio/im-only-sleeping"
+    },
+    {
+      "path": "/img/portfolio/im-only-sleeping/im-only-sleeping-02.avif",
+      "alt": "im-only-sleeping-02",
+      "filename": "im-only-sleeping-02.avif",
+      "folder": "/portfolio/im-only-sleeping"
+    },
+    {
+      "path": "/img/portfolio/im-only-sleeping/im-only-sleeping-03.avif",
+      "alt": "im-only-sleeping-03",
+      "filename": "im-only-sleeping-03.avif",
+      "folder": "/portfolio/im-only-sleeping"
+    },
+    {
+      "path": "/img/portfolio/im-only-sleeping/im-only-sleeping-04.avif",
+      "alt": "im-only-sleeping-04",
+      "filename": "im-only-sleeping-04.avif",
+      "folder": "/portfolio/im-only-sleeping"
+    },
+    {
+      "path": "/img/portfolio/im-only-sleeping/im-only-sleeping-05.avif",
+      "alt": "im-only-sleeping-05",
+      "filename": "im-only-sleeping-05.avif",
+      "folder": "/portfolio/im-only-sleeping"
+    },
+    {
+      "path": "/img/portfolio/im-only-sleeping/im-only-sleeping-06.avif",
+      "alt": "im-only-sleeping-06",
+      "filename": "im-only-sleeping-06.avif",
+      "folder": "/portfolio/im-only-sleeping"
+    },
+    {
+      "path": "/img/portfolio/im-only-sleeping/im-only-sleeping-07.avif",
+      "alt": "im-only-sleeping-07",
+      "filename": "im-only-sleeping-07.avif",
+      "folder": "/portfolio/im-only-sleeping"
+    },
+    {
+      "path": "/img/portfolio/im-only-sleeping/im-only-sleeping-08.avif",
+      "alt": "im-only-sleeping-08",
+      "filename": "im-only-sleeping-08.avif",
+      "folder": "/portfolio/im-only-sleeping"
+    },
+    {
+      "path": "/img/portfolio/im-only-sleeping/im-only-sleeping-09.avif",
+      "alt": "im-only-sleeping-09",
+      "filename": "im-only-sleeping-09.avif",
+      "folder": "/portfolio/im-only-sleeping"
+    },
+    {
+      "path": "/img/portfolio/im-only-sleeping/im-only-sleeping-10.avif",
+      "alt": "im-only-sleeping-10",
+      "filename": "im-only-sleeping-10.avif",
+      "folder": "/portfolio/im-only-sleeping"
+    },
+    {
+      "path": "/img/portfolio/im-only-sleeping/im-only-sleeping-11.avif",
+      "alt": "im-only-sleeping-11",
+      "filename": "im-only-sleeping-11.avif",
+      "folder": "/portfolio/im-only-sleeping"
+    },
+    {
+      "path": "/img/portfolio/phone-a-friend/1.jpg",
+      "alt": "1",
+      "filename": "1.jpg",
+      "folder": "/portfolio/phone-a-friend"
+    },
+    {
+      "path": "/img/portfolio/phone-a-friend/2.jpg",
+      "alt": "2",
+      "filename": "2.jpg",
+      "folder": "/portfolio/phone-a-friend"
+    },
+    {
+      "path": "/img/portfolio/phone-a-friend/3.jpg",
+      "alt": "3",
+      "filename": "3.jpg",
+      "folder": "/portfolio/phone-a-friend"
+    },
+    {
+      "path": "/img/portfolio/phone-a-friend/4.jpg",
+      "alt": "4",
+      "filename": "4.jpg",
+      "folder": "/portfolio/phone-a-friend"
+    },
+    {
+      "path": "/img/portfolio/phone-a-friend/5.jpg",
+      "alt": "5",
+      "filename": "5.jpg",
+      "folder": "/portfolio/phone-a-friend"
+    },
+    {
+      "path": "/img/portfolio/phone-a-friend/6.jpg",
+      "alt": "6",
+      "filename": "6.jpg",
+      "folder": "/portfolio/phone-a-friend"
+    },
+    {
+      "path": "/img/resize.png",
+      "alt": "resize",
+      "filename": "resize.png"
+    },
+    {
+      "path": "/img/scrollhandle.png",
+      "alt": "scrollhandle",
+      "filename": "scrollhandle.png"
+    },
+    {
+      "path": "/img/square-logo-cd-active.png",
+      "alt": "square-logo-cd-active",
+      "filename": "square-logo-cd-active.png"
+    },
+    {
+      "path": "/img/square-logo-cd.png",
+      "alt": "square-logo-cd",
+      "filename": "square-logo-cd.png"
+    },
+    {
+      "path": "/img/ui/check.png",
+      "alt": "check",
+      "filename": "check.png",
+      "folder": "/ui"
+    },
+    {
+      "path": "/img/ui/clouds.jpg",
+      "alt": "clouds",
+      "filename": "clouds.jpg",
+      "folder": "/ui"
+    },
+    {
+      "path": "/img/ui/paper-blue.png",
+      "alt": "paper-blue",
+      "filename": "paper-blue.png",
+      "folder": "/ui"
+    },
+    {
+      "path": "/img/ui/paper.png",
+      "alt": "paper",
+      "filename": "paper.png",
+      "folder": "/ui"
+    },
+    {
+      "path": "/img/ui/reorder.png",
+      "alt": "reorder",
+      "filename": "reorder.png",
+      "folder": "/ui"
+    },
+    {
+      "path": "/img/ui/slider.png",
+      "alt": "slider",
+      "filename": "slider.png",
+      "folder": "/ui"
+    }
+  ]
+}

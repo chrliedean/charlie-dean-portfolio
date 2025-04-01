@@ -5,11 +5,12 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "tsx scripts/generate-gallery.ts && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"generate-gallery": "tsx scripts/generate-gallery.ts"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^4.0.0",
@@ -20,6 +21,7 @@
 		"mdsvex": "^0.12.3",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
+		"tsx": "^4.19.3",
 		"typescript": "^5.0.0",
 		"video.js": "^8.22.0",
 		"vite": "^6.0.0"

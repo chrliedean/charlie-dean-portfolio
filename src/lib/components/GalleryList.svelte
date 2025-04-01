@@ -7,7 +7,7 @@
 
   // Props
   let {
-    folderPath = "/images",
+    folderPath = "/img",
     pageSize = 12,
     captions = {} as Record<number, string>,
     paragraphs = {} as Record<number, string>,
@@ -20,13 +20,19 @@
   let currentPage = $state(1);
   let lightboxOpen = $state(false);
 
-  let images = $state<Array<{ path: string; alt: string; filename: string }>>(
-    []
-  );
+  let images = $state<Array<{ 
+    path: string; 
+    alt: string; 
+    filename: string;
+    folder?: string;
+    parentFolder?: string;
+  }>>([]);
   
   let isLoading = $state(false);
   let hasMore = $state(true);
   let error = $state<string | null>(null);
+  let folders = $state<string[]>([]);
+  let parentFolders = $state<string[]>([]);
 
   // Get current image ID from URL
   let imageId = $derived(
@@ -104,6 +110,8 @@
       const data = await response.json();
       images = [...images, ...data.images];
       hasMore = data.hasMore;
+      folders = data.folders;
+      parentFolders = data.parentFolders;
     } catch (e) {
       error = e instanceof Error ? e.message : "Failed to load images";
     } finally {

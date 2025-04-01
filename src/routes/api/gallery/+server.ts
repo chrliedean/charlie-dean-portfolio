@@ -1,5 +1,3 @@
-import { readdir } from 'fs/promises';
-import { join } from 'path';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
@@ -7,6 +5,8 @@ interface ImageMetadata {
     path: string;
     alt: string;
     filename: string;
+    folder?: string;
+    parentFolder?: string;
 }
 
 interface GalleryResponse {
@@ -15,50 +15,58 @@ interface GalleryResponse {
     page: number;
     pageSize: number;
     hasMore: boolean;
+    folders: string[];
+    parentFolders: string[];
 }
 
 export const GET: RequestHandler = async ({ url }) => {
-    const folderPath = url.searchParams.get('folder') || 'img';
     const page = parseInt(url.searchParams.get('page') || '1');
     const pageSize = parseInt(url.searchParams.get('pageSize') || '12');
+    const folder = url.searchParams.get('folder');
 
     try {
-        // Normalize the path to be relative to static directory
-        const normalizedPath = folderPath.startsWith('/') ? folderPath.slice(1) : folderPath;
-        const fullPath = join(process.cwd(), 'static', normalizedPath);
-
-        // Read directory contents
-        const files: string[] = await readdir(fullPath);
+        // Fetch the gallery.json from the static directory
+        const response = await fetch(`${url.origin}/gallery.json`);
+        if (!response.ok) {
+            throw new Error('Failed to load gallery data');
+        }
         
-        // Filter for image files
-        const imageFiles = files.filter((file: string) => 
-            /\.(avif|gif|heif|jpeg|jpg|png|tiff|webp|svg)$/i.test(file)
-        );
-
-        // Sort files (you can modify this sorting logic)
-        imageFiles.sort();
-
-        // Calculate pagination
+        const data = await response.json();
+        
+        // Filter images by folder if specified
+        let filteredImages = data.images;
+        if (folder) {
+            // Check if the folder contains a slash (full path) or not (parent folder)
+            if (folder.includes('/')) {
+                filteredImages = data.images.filter((img: ImageMetadata) => img.folder === folder);
+            } else {
+                filteredImages = data.images.filter((img: ImageMetadata) => img.parentFolder === folder);
+            }
+        }
+        
+        // Get unique folders and parent folders
+        const folders = [...new Set(data.images
+            .map((img: ImageMetadata) => img.folder)
+            .filter(Boolean))];
+            
+        const parentFolders = [...new Set(data.images
+            .map((img: ImageMetadata) => img.parentFolder)
+            .filter(Boolean))];
+        
+        // Handle pagination
         const startIndex = (page - 1) * pageSize;
         const endIndex = startIndex + pageSize;
-        const paginatedFiles = imageFiles.slice(startIndex, endIndex);
+        const paginatedImages = filteredImages.slice(startIndex, endIndex);
 
-        // Create response with image metadata
-        const images: ImageMetadata[] = paginatedFiles.map((file: string) => ({
-            path: `/${normalizedPath}/${file}`,
-            alt: file.split('.')[0],
-            filename: file
-        }));
-
-        const response: GalleryResponse = {
-            images,
-            total: imageFiles.length,
+        return json({
+            images: paginatedImages,
+            total: filteredImages.length,
             page,
             pageSize,
-            hasMore: endIndex < imageFiles.length
-        };
-
-        return json(response);
+            hasMore: endIndex < filteredImages.length,
+            folders,
+            parentFolders
+        });
     } catch (error) {
         console.error('Error reading gallery:', error);
         return json({ error: 'Failed to read gallery' }, { status: 500 });
