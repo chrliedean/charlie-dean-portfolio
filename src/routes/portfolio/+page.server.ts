@@ -1,5 +1,5 @@
 // File: /portfolio/+page.server.ts
-import type { WindowEntry } from '$lib/types/WindowEntry';
+import type { WindowEntry } from '$lib/types/window';
 
 async function getPosts() {
   let posts: WindowEntry[] = [];

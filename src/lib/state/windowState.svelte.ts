@@ -64,6 +64,13 @@ export function focusWindow(id: string) {
         return;
     }
 
+    // Check if there's an alert window open
+    const alertWindow = windows.find(w => w.style === 'alert');
+    if (alertWindow && alertWindow.id !== id) {
+        // If there's an alert window and we're not focusing it, prevent focus change
+        return;
+    }
+
     // Store current scroll position of all windows
     const scrollPositions = new Map<string, number>();
     windows.forEach(w => {
@@ -107,7 +114,8 @@ export function focusWindow(id: string) {
     windows.forEach((w, index) => {
         if (w.ref?.classList) {
             // Set z-index based on position (last window gets highest z-index)
-            const zIndex = 100 + index;
+            // Alert windows always get the highest z-index
+            const zIndex = w.style === 'alert' ? 9999 : 100 + index;
             w.ref.style.zIndex = `${zIndex}`;
             
             // Update active/inactive classes
@@ -123,7 +131,7 @@ export function focusWindow(id: string) {
             // Wait for next tick to ensure ref is set
             tick().then(() => {
                 if (w.ref?.classList) {
-                    const zIndex = 100 + index;
+                    const zIndex = w.style === 'alert' ? 9999 : 100 + index;
                     w.ref.style.zIndex = `${zIndex}`;
                     if (w.id === id) {
                         w.ref.classList.remove('inactive');
@@ -137,12 +145,12 @@ export function focusWindow(id: string) {
         }
     });
 
-
     // Log final window state
     console.log("📊 Final window state:", windows.map(w => ({
         id: w.id,
         focused: w.id === id,
-        hasRef: !!w.ref
+        hasRef: !!w.ref,
+        style: w.style
     })));
 }
 

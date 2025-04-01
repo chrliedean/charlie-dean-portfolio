@@ -82,6 +82,15 @@ input {
   align-items: flex-start;
 }
 
+.columns {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+
 ::selection {
   background-color: $colors-lavender;
 }
@@ -96,6 +105,7 @@ input {
 }
 
 .titlebar {
+  touch-action: none;
   border-style: solid solid none;
   border-width: 0 0 $line-width;
   border-color: $g900;
@@ -285,7 +295,8 @@ input {
   height: 28px !important;
 
   .window-body {
-    display: none;
+    display: none !important;
+    overflow: hidden;
   }
   .resize-handle {
     display: none !important;
@@ -310,7 +321,6 @@ input {
     // Previously centered; change to flex-start if vertical space is limited
     justify-content: flex-start;
     background-color: $g300;
-    font-family: "EB Garamond", serif;
   }
 
   &.dark {
@@ -332,6 +342,9 @@ input {
     user-select: none;
     -webkit-user-select: none;
 
+    h1, h2, h3, h4, h5, h6 {
+      font-family: "Apple Garamond", serif;
+    }
 
     hgroup {
       user-select: text;
@@ -341,13 +354,54 @@ input {
       border-bottom: $line-width solid $g900;
       padding-bottom: 10px;
       margin-bottom: 20px;
+
+      &.compact {
+        margin-bottom: 10px;
+        padding-bottom: 0;
+
+        h1, h2, h3, h4, h5, h6 {
+          margin: 0;
+        }
+
+        p {
+          font-size: 24px;
+        }
+      }
+
       p {
         font-family: "FindersKeepers", sans-serif;
         font-size: 30px;
       }
+
+
     }
 
     .prose {
+      font-family: "EB Garamond", serif;
+
+      &.sans {
+        font-family: "IBM Plex Sans", sans-serif;
+        font-weight: 400;
+        font-stretch: 100%;
+      }
+
+      p a {
+        color: $colors-green;
+        text-decoration: underline;
+        text-decoration-style: dotted;
+      }
+
+      p a:hover, a:focus {
+        text-decoration: none;
+        background-color: $colors-green;
+        color: $g100;
+      }
+
+      p a:active {
+        color: $colors-green;
+        background-color: transparent;
+      }
+
       p {
         font-size: 20px;
         max-width: 600px;
@@ -376,6 +430,37 @@ input {
     overflow: hidden;
     border-radius: 5px !important;
   }
+}
+
+.bg-gray .window-body {
+  background-color: $g400;
+}
+
+.doc-container {
+  user-select: text;
+  -webkit-user-select: text;
+
+  font-family: "IBM Plex Sans", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+
+  border: $line-width solid $g900;
+  background-color: $g100;
+  width: 500px;
+  margin: 0 auto;
+  padding: 10px;
+  @include bevel($g100, $g600);
+  
+  h2 {
+    margin-top: 0;
+    font-size: 16px;
+    margin-bottom: 0;
+  }
+
+  p {
+    font-size: 16px;
+  }
+
 }
 
 article {
@@ -815,7 +900,36 @@ html {
   display: block;
 }
 
-input {
+.checkbox {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: $g300;
+  border-radius: 0;
+  border: $line-width solid $g900;
+  @include bevel(white, $g700, $shadow: true, $shadow-color: #b2b2b2, $shadow-distance: $line-width);
+}
+
+.checkbox:checked:after {
+  content: "";
+  background-image: url("/img/ui/check.png");
+  background-size: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  top: 8px;
+  left: 12px;
+}
+
+.checkbox-label {
+  display: inline;
+  font-size:24px;
+  line-height: 2px;
+}
+
+input[type="text"] {
   border-radius: 0 !important;
   outline: none;
   border: $line-width solid $g900;
@@ -827,6 +941,7 @@ input {
 }
 
 .alert {
+  z-index: 99999;
   .titlebar {
     display: none;
   }
@@ -877,6 +992,11 @@ input {
                 inset ($line-width * -1) ($line-width * -1) 0 0 $g600,
                 inset $line-width $line-width 0 0 $g200;
   }
+}
+
+a:visted.button {
+  text-decoration: none;
+  color: $g900;
 }
 
 .menubar {
@@ -993,7 +1113,21 @@ input {
 }
 
 .dropdown-content {
-  z-index: 9999999;
+  z-index: 9999;
+}
+
+.dropdown-section::after {
+  display: block;
+  content: "";
+
+  border-bottom: $line-width solid $g600;
+  border-top: $line-width solid $g500;
+}
+
+.dropdown-section::before {
+  content: "";
+  display: block;
+  border-top: $line-width solid $g100;
 }
 
 .list {
@@ -1020,7 +1154,6 @@ input {
 }
 
 .dropdown-menu {
-  z-index: -1;
   top: 26px;
   left: 0;
   border: $line-width solid $g900;
@@ -1067,12 +1200,13 @@ input {
   font-display: swap;
 }
 @font-face {
-  font-family: "Geneva";
-  src: url("/fonts/Geneva.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
+  font-family: "IBM Plex Sans";
+  src: url("/fonts/IBMPlexSans-VariableFont_wdth,wght.ttf") format("truetype");
+  font-stretch: 75% 125%;
+  font-weight: 100 900; 
   font-display: swap;
 }
+
 @font-face {
   font-family: "FindersKeepers";
   src: url("/fonts/FindersKeepers.ttf") format("truetype");

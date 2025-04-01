@@ -1,5 +1,6 @@
 <script context="module" lang="ts">
   import { writable } from "svelte/store";
+  import { soundEnabled } from "$lib/stores/settings";
   export type SoundCommand =
     | "stopall"
     | "drag-start"
@@ -12,7 +13,9 @@
     | "wcls"
     | "wopn"
     | "wzmi"
-    | "wzmo";
+    | "wzmo"
+    | "dscr1"
+    | "dscr2";
   export const soundCommand = writable<SoundCommand | null>(null);
 </script>
 
@@ -101,12 +104,15 @@
         load("wopn", "/media/wopn.mp3", 0.4),
         load("wzmi", "/media/wzmi.mp3", 0.4),
         load("wzmo", "/media/wzmo.mp3", 0.4),
+        load("dscr1", "/media/dscr1.mp3", 0.4),
+        load("dscr2", "/media/dscr2.mp3", 0.4),
       ]);
     })();
 
     // Subscribe to sound commands.
     const unsubscribe = soundCommand.subscribe((cmd) => {
       if (!cmd) return;
+      if (!$soundEnabled) return;
       suppressMouseUp = true;
       switch (cmd) {
         case "drag-start":
@@ -143,6 +149,12 @@
         case "wzmo":
           play("wzmo");
           break;
+        case "dscr1":
+          play("dscr1");
+          break;
+        case "dscr2":
+          play("dscr2");
+          break;
         case "stopall":
           stopAllSounds();
           break;
@@ -155,9 +167,11 @@
 
   // Global handlers: any left click will stop all sounds.
   function handleMouseDown(event: MouseEvent) {
+    if (!$soundEnabled) return;
     play("down");
   }
   function handleMouseUp(event: MouseEvent) {
+    if (!$soundEnabled) return;
     stopAllSounds();
     if (!suppressMouseUp) {
       play("up");

@@ -19,9 +19,9 @@
     originDropdownId: null,
     currentSelectedItem: null,
     lastSoundTime: 0,
-    lastHoveredItem: null
+    lastHoveredItem: null,
   });
-  setContext('globalDropdownState', globalDropdownState);
+  setContext("globalDropdownState", globalDropdownState);
 
   // State
   let time = $state("");
@@ -45,7 +45,7 @@
 
   // Cleanup when component unmounts
   onDestroy(() => clearInterval(interval));
-  
+
   // Close dropdowns handler - now moved to a proper interactive element
   function preventEventBubbling(e: MouseEvent) {
     // This prevents the document click handler from closing menus
@@ -57,13 +57,19 @@
   function toggleFullscreen() {
     if (!browser) return;
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => {
-        isFullscreen = true;
-      }).catch(err => console.error("Error going fullscreen:", err));
+      document.documentElement
+        .requestFullscreen()
+        .then(() => {
+          isFullscreen = true;
+        })
+        .catch((err) => console.error("Error going fullscreen:", err));
     } else {
-      document.exitFullscreen().then(() => {
-        isFullscreen = false;
-      }).catch(err => console.error("Error exiting fullscreen:", err));
+      document
+        .exitFullscreen()
+        .then(() => {
+          isFullscreen = false;
+        })
+        .catch((err) => console.error("Error exiting fullscreen:", err));
     }
   }
 
@@ -71,29 +77,32 @@
   function handleKeyDown(e: KeyboardEvent) {
     if (!activeMenuItem) return;
 
-    const menuItems = document.querySelectorAll('.menubar-item');
-    const currentIndex = Array.from(menuItems).findIndex(item => item.id === activeMenuItem);
+    const menuItems = document.querySelectorAll(".menubar-item");
+    const currentIndex = Array.from(menuItems).findIndex(
+      (item) => item.id === activeMenuItem
+    );
 
     switch (e.key) {
-      case 'ArrowLeft':
+      case "ArrowLeft":
         e.preventDefault();
-        const prevIndex = (currentIndex - 1 + menuItems.length) % menuItems.length;
+        const prevIndex =
+          (currentIndex - 1 + menuItems.length) % menuItems.length;
         (menuItems[prevIndex] as HTMLElement).focus();
         break;
-      case 'ArrowRight':
+      case "ArrowRight":
         e.preventDefault();
         const nextIndex = (currentIndex + 1) % menuItems.length;
         (menuItems[nextIndex] as HTMLElement).focus();
         break;
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
         const currentItem = menuItems[currentIndex];
-        const dropdownToggle = currentItem.querySelector('.dropdown-toggle');
+        const dropdownToggle = currentItem.querySelector(".dropdown-toggle");
         if (dropdownToggle) {
           (dropdownToggle as HTMLElement).click();
         }
         break;
-      case 'Escape':
+      case "Escape":
         e.preventDefault();
         if (activeMenuItem) {
           const currentItem = document.getElementById(activeMenuItem);
@@ -109,7 +118,7 @@
   // Function to handle menu item focus
   function handleMenuItemFocus(e: FocusEvent) {
     const target = e.target as HTMLElement;
-    const menuItem = target.closest('.menubar-item');
+    const menuItem = target.closest(".menubar-item");
     if (menuItem) {
       activeMenuItem = menuItem.id;
     }
@@ -117,31 +126,31 @@
 
   onMount(() => {
     if (browser) {
-      document.addEventListener('fullscreenchange', () => {
+      document.addEventListener("fullscreenchange", () => {
         isFullscreen = !!document.fullscreenElement;
       });
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
     }
   });
 
   onDestroy(() => {
     if (browser) {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     }
   });
 </script>
 
 <!-- Made the menubar a div instead of nav to avoid accessibility warnings -->
-<div 
-  class="menubar" 
-  role="menubar" 
-  aria-label="Main Menu" 
+<div
+  class="menubar"
+  role="menubar"
+  aria-label="Main Menu"
   onfocusin={handleMenuItemFocus}
 >
   <div class="menubar-left">
     <Dropdown className="menubar-item logo w-dropdown" id="app-menu">
-      <div 
-        class="dropdown-toggle w-dropdown-toggle" 
+      <div
+        class="dropdown-toggle w-dropdown-toggle"
         slot="toggle"
         onclick={preventEventBubbling}
         role="menuitem"
@@ -151,39 +160,65 @@
         <div class="menubar-item-contents"></div>
       </div>
 
-      <nav class="dropdown-menu w-dropdown-list" role="menu">
-        <SmartLink href="/" classname="dropdown-link w-dropdown-link">
-          Go to Homepage
-        </SmartLink>
-        
-        <SmartLink
-          href="/enter-password"
-          classname="dropdown-link w-dropdown-link">
-          Enter Password...
-        </SmartLink>
-        
-        <a href="#" class="dropdown-link w-dropdown-link" role="menuitem">
-          About this Website
-        </a>
+      <nav class="dropdown-menu w-dropdown-list">
+        <div class="dropdown-section">
+          <SmartLink href="/" classname="dropdown-link w-dropdown-link">
+            Go to Homepage
+          </SmartLink>
 
-        <SmartLink href="/e-charlie" classname="dropdown-link w-dropdown-link" role="menuitem">
-          E-Charlie...
-        </SmartLink>
+          <SmartLink
+            href="/e-charlie"
+            classname="dropdown-link w-dropdown-link"
+            role="menuitem"
+          >
+            E-Charlie...
+          </SmartLink>
 
-        <span class="dropdown-link w-dropdown-link" role="menuitem" onclick={toggleFullscreen}>
-          {#if isFullscreen}
-          Exit fullscreen
-          {:else}
-          Enter fullscreen
-          {/if}
-        </span>
+          <SmartLink
+            href="/enter-password"
+            classname="dropdown-link w-dropdown-link"
+          >
+            Enter Password...
+          </SmartLink>
+        </div>
+        <div class="dropdown-section">
+          <SmartLink
+            href="/about-this-website"
+            classname="dropdown-link w-dropdown-link"
+            role="menuitem"
+          >
+            About this Website
+          </SmartLink>
+
+          <SmartLink
+            href="/settings"
+            classname="dropdown-link w-dropdown-link"
+            role="menuitem"
+          >
+            Website Settings...
+          </SmartLink>
+        </div>
+
+        <div class="dropdown-section">
+          <span
+            class="dropdown-link w-dropdown-link"
+            role="menuitem"
+            onclick={toggleFullscreen}
+          >
+            {#if isFullscreen}
+              Exit fullscreen
+            {:else}
+              Enter fullscreen
+            {/if}
+          </span>
+        </div>
       </nav>
     </Dropdown>
-    
+
     <!-- Convert direct links to dropdowns with one item -->
     <Dropdown className="menubar-item w-dropdown" id="portfolio-menu">
-      <div 
-        class="dropdown-toggle w-dropdown-toggle" 
+      <div
+        class="dropdown-toggle w-dropdown-toggle"
         slot="toggle"
         onclick={preventEventBubbling}
       >
@@ -195,10 +230,10 @@
         </SmartLink>
       </nav>
     </Dropdown>
-    
+
     <Dropdown className="menubar-item w-dropdown" id="client-work-menu">
-      <div 
-        class="dropdown-toggle w-dropdown-toggle" 
+      <div
+        class="dropdown-toggle w-dropdown-toggle"
         slot="toggle"
         onclick={preventEventBubbling}
       >
@@ -210,10 +245,10 @@
         </a>
       </nav>
     </Dropdown>
-    
+
     <Dropdown className="menubar-item w-dropdown" id="about-menu">
-      <div 
-        class="dropdown-toggle w-dropdown-toggle" 
+      <div
+        class="dropdown-toggle w-dropdown-toggle"
         slot="toggle"
         onclick={preventEventBubbling}
       >
@@ -223,25 +258,35 @@
         <SmartLink href="/about" classname="dropdown-link w-dropdown-link">
           About Charlie Dean
         </SmartLink>
+        <SmartLink href="/about/cv" classname="dropdown-link w-dropdown-link">
+          View CV
+        </SmartLink>
       </nav>
     </Dropdown>
-    
+
     <Dropdown className="menubar-item w-dropdown" id="contact-menu">
-      <div 
-        class="dropdown-toggle w-dropdown-toggle" 
+      <div
+        class="dropdown-toggle w-dropdown-toggle"
         slot="toggle"
         onclick={preventEventBubbling}
       >
         <div class="menubar-item-contents">Contact</div>
       </div>
       <nav class="dropdown-menu w-dropdown-list" role="menu">
+
         <SmartLink href="/contact" classname="dropdown-link w-dropdown-link">
           Contact Information
         </SmartLink>
+        <a href="mailto:charlie@charliedean.com" class="dropdown-link w-dropdown-link">
+          Open Email Client
+        </a>
+        <a href="https://www.instagram.com/charlie.f.dean/" target="_blank" class="dropdown-link w-dropdown-link">
+          Instagram
+        </a>
       </nav>
     </Dropdown>
   </div>
-  
+
   <div class="menubar-right">
     <div class="menubar-item">
       <div id="clock" class="menubar-item-contents">{time}</div>
@@ -251,8 +296,8 @@
     </div>
 
     <Dropdown className="menubar-item w-dropdown" id="windows-menu">
-      <div 
-        class="dropdown-toggle w-dropdown-toggle" 
+      <div
+        class="dropdown-toggle w-dropdown-toggle"
         slot="toggle"
         onclick={preventEventBubbling}
       >
@@ -262,7 +307,7 @@
             {#if focusedWindow.icon}
               <Icon name={focusedWindow.icon} size="1em" />
             {/if}
-            {focusedWindow.title || 'Untitled Window'}
+            {focusedWindow.title || "Untitled Window"}
           {:else}
             No Windows Open
           {/if}
@@ -282,4 +327,3 @@
     </Dropdown>
   </div>
 </div>
-

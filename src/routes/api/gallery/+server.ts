@@ -18,7 +18,7 @@ interface GalleryResponse {
 }
 
 export const GET: RequestHandler = async ({ url }) => {
-    const folderPath = url.searchParams.get('folder') || '/images';
+    const folderPath = url.searchParams.get('folder') || 'img';
     const page = parseInt(url.searchParams.get('page') || '1');
     const pageSize = parseInt(url.searchParams.get('pageSize') || '12');
 

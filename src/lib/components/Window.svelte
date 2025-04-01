@@ -254,45 +254,170 @@
   
   function setupDirectEventHandlers() {
     if (windowEl) {
+      // Mouse events
       windowEl.addEventListener('mousedown', handleWindowMouseDown as EventListener);
       windowEl.querySelector('.titlebar')?.addEventListener('mousedown', handleTitleBarMouseDown as EventListener);
       windowEl.querySelector('.resize-handle')?.addEventListener('mousedown', handleResizeMouseDown as EventListener);
+      
+      // Touch events
+      windowEl.addEventListener('touchstart', handleWindowTouchStart as EventListener);
+      windowEl.querySelector('.titlebar')?.addEventListener('touchstart', handleTitleBarTouchStart as EventListener);
+      windowEl.querySelector('.resize-handle')?.addEventListener('touchstart', handleResizeTouchStart as EventListener);
     }
   }
 
   function setupEventHandlers() {
     if (eventHandlersAttached) return;
-    
-    // Make sure we're not attaching handlers multiple times
     eventHandlersAttached = true;
-    
-    // Handle clicks outside the window
-    //document.addEventListener("mousedown", handleGlobalMouseDown);
-    
-    // Handle window resize
     window.addEventListener("resize", clampPositionToViewport);
   }
   
   function removeEventHandlers() {
     if (!eventHandlersAttached) return;
-    
     eventHandlersAttached = false;
     
-    //document.removeEventListener("mousedown", handleGlobalMouseDown);
     window.removeEventListener("resize", clampPositionToViewport);
     
-    // Make sure any active drag operations are cleaned up
+    // Clean up all event listeners
     window.removeEventListener("mousemove", handleMouseMove);
     window.removeEventListener("mouseup", handleMouseUp);
+    window.removeEventListener("touchmove", handleTouchMove);
+    window.removeEventListener("touchend", handleTouchEnd);
     window.removeEventListener("mousemove", handleResizing);
     window.removeEventListener("mouseup", handleResizeMouseUp);
+    window.removeEventListener("touchmove", handleResizeTouchMove);
+    window.removeEventListener("touchend", handleResizeTouchEnd);
     
-    // Clean up direct DOM event listeners
     if (windowEl) {
       windowEl.removeEventListener('mousedown', handleWindowMouseDown as EventListener);
+      windowEl.removeEventListener('touchstart', handleWindowTouchStart as EventListener);
       windowEl.querySelector('.titlebar')?.removeEventListener('mousedown', handleTitleBarMouseDown as EventListener);
+      windowEl.querySelector('.titlebar')?.removeEventListener('touchstart', handleTitleBarTouchStart as EventListener);
       windowEl.querySelector('.resize-handle')?.removeEventListener('mousedown', handleResizeMouseDown as EventListener);
+      windowEl.querySelector('.resize-handle')?.removeEventListener('touchstart', handleResizeTouchStart as EventListener);
     }
+  }
+
+  // Touch event handlers
+  function handleWindowTouchStart(event: TouchEvent) {
+    // Only prevent default if we're not in the window body
+    if (!(event.target as HTMLElement).closest('.window-body')) {
+      event.preventDefault();
+    }
+    if (isDragging || isResizing) return;
+    if ((event.target as HTMLElement).closest(".titlebar-button")) return;
+    if ((event.target as HTMLElement).closest("a")) return;
+    if (windowEl.classList.contains("active")) return;
+    
+    // For alert windows, always focus
+    if (style === 'alert') {
+      focusWindow(id);
+      return;
+    }
+    
+    focusWindow(id);
+  }
+
+  function handleTitleBarTouchStart(event: TouchEvent) {
+    event.preventDefault();
+    if ((event.target as HTMLElement).closest(".titlebar-button")) return;
+    
+    // For alert windows, don't allow dragging
+    if (style === 'alert') {
+      event.stopPropagation();
+      return;
+    }
+    
+    focusWindow(id);
+    startDragging(event.touches[0]);
+    event.stopPropagation();
+  }
+
+  function handleResizeTouchStart(event: TouchEvent) {
+    event.preventDefault();
+    bringToFront();
+    isResizing = true;
+    resizeStart = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+    startSize = {
+      width: windowEl.offsetWidth,
+      height: windowEl.offsetHeight,
+    };
+    window.addEventListener("touchmove", handleResizeTouchMove);
+    window.addEventListener("touchend", handleResizeTouchEnd);
+    soundCommand.set("drag-start");
+    event.stopPropagation();
+  }
+
+  function handleTouchMove(event: TouchEvent) {
+    if (!isDragging) return;
+    event.preventDefault();
+    dragOccurred = true;
+    
+    const winWidth = windowEl.offsetWidth;
+    const winHeight = windowEl.offsetHeight;
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    
+    let x = event.touches[0].clientX - offset.x;
+    let y = event.touches[0].clientY - offset.y;
+    
+    x = Math.max(0, Math.min(x, screenWidth - winWidth));
+    y = Math.max(topPadding, Math.min(y, screenHeight - winHeight));
+    
+    windowEl.style.left = `${x}px`;
+    windowEl.style.top = `${y}px`;
+  }
+
+  function handleTouchEnd() {
+    if (isDragging) {
+      soundCommand.set("drag-end");
+      isDragging = false;
+      updateWindowState();
+    }
+    
+    window.removeEventListener("touchmove", handleTouchMove);
+    window.removeEventListener("touchend", handleTouchEnd);
+  }
+
+  function handleResizeTouchMove(event: TouchEvent) {
+    if (!isResizing) return;
+    event.preventDefault();
+    const deltaX = event.touches[0].clientX - resizeStart.x;
+    const deltaY = event.touches[0].clientY - resizeStart.y;
+    let newWidth = Math.max(minWidth, startSize.width + deltaX);
+    let newHeight = Math.max(minHeight, startSize.height + deltaY);
+    if (maxSize) {
+      newWidth = Math.min(newWidth, maxSize.width);
+      newHeight = Math.min(newHeight, maxSize.height);
+    }
+    windowEl.style.width = `${newWidth}px`;
+    windowEl.style.height = `${newHeight}px`;
+  }
+
+  function handleResizeTouchEnd() {
+    isResizing = false;
+    window.removeEventListener("touchmove", handleResizeTouchMove);
+    window.removeEventListener("touchend", handleResizeTouchEnd);
+    updateWindowState();
+    soundCommand.set("drag-end");
+  }
+
+  // Update startDragging to handle both mouse and touch events
+  function startDragging(event: MouseEvent | Touch) {
+    soundCommand.set("drag-start");
+    isDragging = true;
+    dragOccurred = false;
+    
+    const rect = windowEl.getBoundingClientRect();
+    offset = {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    };
+    
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("touchmove", handleTouchMove);
+    window.addEventListener("touchend", handleTouchEnd);
   }
 
   // Set window as inactive
@@ -323,6 +448,12 @@
     // Don't process if window is already focused
     if (windowEl.classList.contains("active")) return;
     
+    // For alert windows, always focus
+    if (style === 'alert') {
+      focusWindow(id);
+      return;
+    }
+    
     // Focus the window without triggering scroll reset
     focusWindow(id);
   }
@@ -332,6 +463,13 @@
     // Don't process clicks on buttons
     if ((event.target as HTMLElement).closest(".titlebar-button")) return;
     
+    // For alert windows, don't allow dragging
+    if (style === 'alert') {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    
     // First focus the window
     focusWindow(id);
     
@@ -340,24 +478,6 @@
     
     // Make sure the event doesn't propagate up
     event.stopPropagation();
-  }
-
-  function startDragging(event: MouseEvent) {
-    if (event.button !== 0) return;
-
-    soundCommand.set("drag-start");
-    
-    isDragging = true;
-    dragOccurred = false;
-    
-    const rect = windowEl.getBoundingClientRect();
-    offset = {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-    };
-    
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
   }
 
   function handleMouseMove(event: MouseEvent) {
@@ -493,6 +613,12 @@
   }
 
   function toggleZoom() {
+
+    if (minimized) {
+      windowEl.classList.remove("minimized");
+      minimized = false;
+    }
+    
     if (!isZoomed) {
       // Store current size and position before zooming
       previousSize = {
@@ -533,6 +659,10 @@
   <div bind:this={overlayEl} class="animate-overlay"></div>
 {/if}
 
+{#if style === 'alert'}
+  <div class="alert-window-overlay"></div>
+{/if}
+
 <div
   bind:this={windowEl}
   class="window {style}"
@@ -544,6 +674,7 @@
       <div
         class="titlebar-button"
         onclick={closeWindowButton}
+        ontouchstart={closeWindowButton}
         role="presentation"
       ></div>
       <div class="window-stripes">
@@ -568,9 +699,11 @@
         <div class="horizontal-window-stripe"></div>
         <div class="horizontal-window-stripe"></div>
       </div>
+      {#if resizable}
       <div class="titlebar-button zoom-parent" onclick={toggleZoom} role="presentation">
         <div class="titlebar-button-zoom"></div>
       </div>
+      {/if}
       <div class="titlebar-button" onclick={minimizeWindow} ontouchstart={minimizeWindow} role="presentation">
         <div class="titlebar-button-minimize"></div>
       </div>
@@ -596,6 +729,20 @@
     border: 3px dashed #000;
     pointer-events: none;
   }
+
+
+  .alert-window-overlay {
+    position: absolute;
+    z-index: 9999;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+  
 
   .window-wrapper {
     position: relative;

@@ -99,6 +99,7 @@ input {
   inset: 0%;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: none;
 }
 
 .titlebar:active {
@@ -136,6 +137,7 @@ input {
   transform: none;
   display: flex;
   flex-direction: column;
+  touch-action: none;
 }
 
 .title-bar-flexbox {
@@ -402,6 +404,7 @@ p.portfolio-year {
   outline: var(--line-width) solid var(--_colors---grays-400);
   border-top: var(--line-width) solid var(--_colors---grays-200);
   border-left: var(--line-width) solid var(--_colors---grays-200);
+  touch-action: none;
 }
 
 .inactive .resize-handle {
@@ -434,6 +437,7 @@ p.portfolio-year {
   padding: 0;
   display: flex;
   visibility: visible;
+  touch-action: none;
 }
 
 .inactive .titlebar-button {
@@ -473,6 +477,7 @@ p.portfolio-year {
   outline: 3px #333;
   flex-flow: column;
   display: flex;
+  touch-action: none;
 }
 
 .window-stripes {

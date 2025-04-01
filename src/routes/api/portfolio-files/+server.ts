@@ -62,3 +62,9 @@ async function getPosts() {
   
   return posts;
 }
+
+export async function _randomPost() {
+  const posts = await getPosts();
+  const post = posts[Math.floor(Math.random() * posts.length)];
+  return post.route;
+}

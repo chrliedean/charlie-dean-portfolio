@@ -77,7 +77,15 @@
       goto(`?gallery&id=${nextId}`, { keepFocus: true });
     }
   }
-      
+
+  // Function to handle lightbox previous image
+  function handleLightboxPreviousImage() {
+    const currentId = $page.url.searchParams.get("id") ? parseInt($page.url.searchParams.get("id")!) : null;
+    if (currentId !== null) {
+      const previousId = (currentId - 1 + images.length) % images.length;
+      goto(`?gallery&id=${previousId}`, { keepFocus: true });
+    }
+  }
 
   // Fetch images for current page
   async function fetchImages() {
@@ -137,6 +145,7 @@
       imageAlt={currentImage.alt}
       onClose={handleLightboxClose}
       onNextImage={handleLightboxNextImage}
+      onPreviousImage={handleLightboxPreviousImage}
       imageCaption={imageId !== null ? captions[imageId] : undefined}
     />
   </div>
