@@ -5,6 +5,7 @@
   import { browser } from "$app/environment";
   import Window from "./Window.svelte";
   import type { WindowEntry } from "$lib/types/window";
+  import { afterNavigate } from "$app/navigation";
 
   import {
     getWindows,
@@ -31,9 +32,13 @@
   }
 
   onMount(() => {
+    console.log("🪟 WindowManager mounted");
+    
+
     window.addEventListener("mousedown", recordOrigin);
     return () => {
       window.removeEventListener("mousedown", recordOrigin);
+      console.log("🪟 WindowManager unmounted");
     };
   });
 
@@ -132,22 +137,20 @@
       const response = await fetch(`/api/portfolio-files/${postId}`);
       if (response.ok) {
         const data = await response.json();
-        console.log(`🛠️ Loaded data for post ${postId} via API`);
         return data;
       }
 
-      // If that fails, try to import the markdown file directly
-      const post = await import(`/src/portfolio-files/${postId}.md`);
-      if (post && post.metadata) {
-        console.log(`🛠️Loaded data for post ${postId} via direct import`);
-        return {
-          content: post.default,
-          meta: {
-            ...post.metadata,
-            id: postId,
-          },
-        };
-      }
+      // // If that fails, try to import the markdown file directly
+      // const post = await import(`/src/portfolio-files/${postId}.md`);
+      // if (post && post.metadata) {
+      //   return {
+      //     content: post.default,
+      //     meta: {
+      //       ...post.metadata,
+      //       id: postId,
+      //     },
+      //   };
+      // }
 
       console.error(`Failed to load post ${postId}`);
       return null;
@@ -163,7 +166,6 @@
 
   async function handleRouteChange(route: string) {
     route = normalizeRoute(route);
-    console.log(`🔄 Handling route change to: ${route}`);
 
     // Get current page data from the SvelteKit store
     const currentPageData = get(page).data;
@@ -175,7 +177,6 @@
       // Check if this window is already focused
       const focusedWindow = getFocusedWindow();
       if (focusedWindow?.id === route) {
-        console.log(`⏭️ Window ${route} already focused, skipping`);
         return;
       }
       
@@ -185,7 +186,6 @@
         await tick();
       }
       
-      console.log(`🔄 Focusing existing window: ${route}`);
       focusWindow(route);
       return;
     }
@@ -215,12 +215,7 @@
             // Add the click origin for animation
             xyorigin: lastOrigin || undefined
           };
-          console.log(`📝 Created new portfolio window config for ${route}`, {
-            hasComponent: !!portfolioConfig.component,
-            data: portfolioConfig.data,
-            xyorigin: portfolioConfig.xyorigin,
-            icon: portfolioConfig.icon
-          });
+ 
           baseConfig = portfolioConfig;
         } else {
           console.error(`❌ No base config found for dynamic route at /portfolio/[id]`);

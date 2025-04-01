@@ -2,7 +2,7 @@
 title: Shave Your Tongue
 id: shave-your-tongue
 route: /portfolio/shave-your-tongue
-icon: movie
+icon: music
 date: '2023-4-14'
 medium: Single-channel digital video, 1 min 11 sec
 categories:

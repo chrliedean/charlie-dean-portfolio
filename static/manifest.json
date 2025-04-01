@@ -1,0 +1,14 @@
+{
+    "name": "Charlie Dean",
+    "start_url": "/",
+    "icons": [
+      {
+        "src": "favicon.png",
+        "sizes": "256x256",
+        "type": "image/png"
+      }
+    ],
+    "display": "standalone",
+    "background_color": "#EEE",
+    "theme_color": "#EEE"
+  }

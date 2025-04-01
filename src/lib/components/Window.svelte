@@ -30,10 +30,14 @@
   let closing = false;
   let opening = false;
   let borderTransform = "scale(1)";
+  let isZoomed = false;
+  let previousSize: { width: number; height: number } | null = null;
+  let previousPosition: { x: number; y: number } | null = null;
 
   let windowEl: HTMLDivElement;
   let overlayEl: HTMLDivElement;
   let showOverlay = false;
+  let windowBody: HTMLDivElement;
 
   // Update ref whenever windowEl changes
   $: if (windowEl) {
@@ -48,6 +52,9 @@
   const dispatch = createEventDispatcher();
 
   export let closeWindow: (id: string) => void;
+
+  let lightboxMode = false;
+  let lightboxScrollPosition = 0;
 
   let zIndex = 0;
   
@@ -156,12 +163,30 @@
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
         const left = (screenWidth - winWidth) / 2;
-        const top = 26 + (screenHeight - 26 - winHeight) / 2;
+        const top = topPadding + (screenHeight - topPadding - winHeight) / 2;
         windowEl.style.left = `${left}px`;
         windowEl.style.top = `${top}px`;
         resolve();
       });
     });
+  }
+
+  // Function to handle windowZoom event
+  function handleLightboxMode(event: CustomEvent) {
+    if (event.detail.windowId === id) {
+      if (!lightboxMode) {
+        lightboxMode = true;
+        windowBody.style.overflow = "hidden";
+        lightboxScrollPosition = windowBody.scrollTop;
+        windowBody.scrollTop = 0;
+        toggleZoom();
+      } else {
+        lightboxMode = false;
+        windowBody.style.overflow = "scroll";
+        windowBody.scrollTop = lightboxScrollPosition;
+        toggleZoom();
+      }
+    }
   }
 
   onMount(() => {
@@ -215,11 +240,15 @@
       await animateOverlayOpen();
     })();
     
+    // Add event listener for windowZoom
+    document.addEventListener('lightboxMode', handleLightboxMode as EventListener);
+    
     return () => {
       console.log(`🧹 Cleaning up window: ${id}`);
       removeEventHandlers();
       // Clear the ref when unmounting
       ref = null;
+      document.removeEventListener('lightboxMode', handleLightboxMode as EventListener);
     };
   });
   
@@ -463,6 +492,40 @@
     closeWindow(id);
   }
 
+  function toggleZoom() {
+    if (!isZoomed) {
+      // Store current size and position before zooming
+      previousSize = {
+        width: windowEl.offsetWidth,
+        height: windowEl.offsetHeight
+      };
+      previousPosition = {
+        x: windowEl.offsetLeft,
+        y: windowEl.offsetTop
+      };
+
+      // Calculate maximum available size
+      const maxWidth = maxSize ? Math.min(maxSize.width, window.innerWidth - padding * 2) : window.innerWidth - padding * 2;
+      const maxHeight = maxSize ? Math.min(maxSize.height, window.innerHeight - padding * 2) : window.innerHeight - padding * 2;
+
+      // Set window to maximum size
+      windowEl.style.width = `${maxWidth}px`;
+      windowEl.style.height = `${maxHeight - topPadding}px`;
+      windowEl.style.left = `${padding}px`;
+      windowEl.style.top = `${topPadding + padding}px`;
+    } else if (previousSize && previousPosition) {
+      // Restore previous size and position
+      windowEl.style.width = `${previousSize.width}px`;
+      windowEl.style.height = `${previousSize.height}px`;
+      windowEl.style.left = `${previousPosition.x}px`;
+      windowEl.style.top = `${previousPosition.y}px`;
+    }
+
+    isZoomed = !isZoomed;
+    updateWindowState();
+    soundCommand.set(isZoomed ? "wzmi" : "wzmo");
+  }
+
   setContext("windowId", id);
 </script>
 
@@ -505,7 +568,7 @@
         <div class="horizontal-window-stripe"></div>
         <div class="horizontal-window-stripe"></div>
       </div>
-      <div class="titlebar-button zoom-parent">
+      <div class="titlebar-button zoom-parent" onclick={toggleZoom} role="presentation">
         <div class="titlebar-button-zoom"></div>
       </div>
       <div class="titlebar-button" onclick={minimizeWindow} ontouchstart={minimizeWindow} role="presentation">
@@ -513,7 +576,7 @@
       </div>
     </div>
   </div>
-  <div class="window-body" role="presentation">
+  <div class="window-body" role="presentation" bind:this={windowBody}>
     <slot data={$$props.data} {id} />
   </div>
   <div

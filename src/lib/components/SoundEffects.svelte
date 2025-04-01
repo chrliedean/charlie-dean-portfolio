@@ -10,7 +10,9 @@
     | "mnuc"
     | "mnui"
     | "wcls"
-    | "wopn";
+    | "wopn"
+    | "wzmi"
+    | "wzmo";
   export const soundCommand = writable<SoundCommand | null>(null);
 </script>
 
@@ -97,6 +99,8 @@
         load("mnui", "/media/mnui.mp3", 0.4),
         load("wcls", "/media/wcls.mp3", 0.4),
         load("wopn", "/media/wopn.mp3", 0.4),
+        load("wzmi", "/media/wzmi.mp3", 0.4),
+        load("wzmo", "/media/wzmo.mp3", 0.4),
       ]);
     })();
 
@@ -132,6 +136,12 @@
           break;
         case "wopn":
           play("wopn");
+          break;
+        case "wzmi":
+          play("wzmi");
+          break;
+        case "wzmo":
+          play("wzmo");
           break;
         case "stopall":
           stopAllSounds();

@@ -1,11 +1,12 @@
 import { browser } from '$app/environment';
 import type { WindowEntry } from '../types/window';
-import { goto, disableScrollHandling } from "$app/navigation";
+import { goto, disableScrollHandling, afterNavigate } from "$app/navigation";
 import { tick } from "svelte";
 
 // State
 let windows = $state<WindowEntry[]>([]);
 let focusedWindowId = $state<string | null>(null);
+let shouldDisableScroll = $state(false);
 
 // Getters
 export function getWindows() {
@@ -70,7 +71,6 @@ export function focusWindow(id: string) {
             const body = w.ref.querySelector('.window-body') as HTMLElement;
             if (body) {
                 scrollPositions.set(w.id, body.scrollTop);
-                console.log(`📜 Stored scroll position for ${w.id}: ${body.scrollTop}`);
             }
         }
     });
@@ -83,12 +83,24 @@ export function focusWindow(id: string) {
 
     // Only update URL if it doesn't match the current route
     if (browser && window.location.pathname !== win.route) {
-        console.log(`🔄 Updating URL from ${window.location.pathname} to ${win.route}`);
+        shouldDisableScroll = true;
         goto(win.route, { 
             replaceState: true,
             noScroll: true
+        }).then(() => {
+            // Restore scroll positions after navigation completes
+            tick().then(() => {
+                windows.forEach(w => {
+                    if (w.ref?.querySelector('.window-body')) {
+                        const body = w.ref.querySelector('.window-body') as HTMLElement;
+                        const savedScroll = scrollPositions.get(w.id);
+                        if (body && savedScroll !== undefined) {
+                            body.scrollTop = savedScroll;
+                        }
+                    }
+                });
+            });
         });
-
     }
 
     // Update z-indices for all windows based on their position in the array
@@ -102,11 +114,9 @@ export function focusWindow(id: string) {
             if (w.id === id) {
                 w.ref.classList.remove('inactive');
                 w.ref.classList.add('active');
-                console.log(`✅ Window ${w.id} focused with z-index ${zIndex}`);
             } else {
                 w.ref.classList.remove('active');
                 w.ref.classList.add('inactive');
-                console.log(`⏭️ Window ${w.id} unfocused with z-index ${zIndex}`);
             }
         } else {
             console.warn(`⚠️ Window ${w.id} has no ref, waiting for next tick`);
@@ -118,11 +128,9 @@ export function focusWindow(id: string) {
                     if (w.id === id) {
                         w.ref.classList.remove('inactive');
                         w.ref.classList.add('active');
-                        console.log(`✅ Window ${w.id} focused with z-index ${zIndex} (after tick)`);
                     } else {
                         w.ref.classList.remove('active');
                         w.ref.classList.add('inactive');
-                        console.log(`⏭️ Window ${w.id} unfocused with z-index ${zIndex} (after tick)`);
                     }
                 }
             });
@@ -141,3 +149,4 @@ export function focusWindow(id: string) {
 export function initializeWindows(initialWindows: WindowEntry[]) {
     windows = initialWindows;
 }
+
