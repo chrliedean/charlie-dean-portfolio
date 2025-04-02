@@ -15,4 +15,4 @@ icon: clip
         1: "I built the doorway to exactly my height at time of construction."
     }
 </script>
-<GalleryList folderPath="/img/portfolio/im-only-sleeping" pageSize={11} {captions}/>
+<GalleryList folderPath="/portfolio/im-only-sleeping" pageSize={11} {captions}/>

@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { getGalleryData } from '$lib/server/galleryData';
 
 interface ImageMetadata {
     path: string;
@@ -25,31 +26,30 @@ export const GET: RequestHandler = async ({ url }) => {
     const folder = url.searchParams.get('folder');
 
     try {
-        // Fetch the gallery.json from the static directory
-        const response = await fetch(`${url.origin}/gallery.json`);
-        if (!response.ok) {
-            throw new Error('Failed to load gallery data');
-        }
+        // Get gallery data from our server module
+        const galleryData = getGalleryData();
         
-        const data = await response.json();
+        // Log some debug info
+        console.log('Gallery API called:', { page, pageSize, folder });
+        console.log('Total images in gallery:', galleryData.images.length);
         
         // Filter images by folder if specified
-        let filteredImages = data.images;
+        let filteredImages = galleryData.images;
         if (folder) {
             // Check if the folder contains a slash (full path) or not (parent folder)
             if (folder.includes('/')) {
-                filteredImages = data.images.filter((img: ImageMetadata) => img.folder === folder);
+                filteredImages = galleryData.images.filter((img: ImageMetadata) => img.folder === folder);
             } else {
-                filteredImages = data.images.filter((img: ImageMetadata) => img.parentFolder === folder);
+                filteredImages = galleryData.images.filter((img: ImageMetadata) => img.parentFolder === folder);
             }
         }
         
         // Get unique folders and parent folders
-        const folders = [...new Set(data.images
+        const folders = [...new Set(galleryData.images
             .map((img: ImageMetadata) => img.folder)
             .filter(Boolean))];
             
-        const parentFolders = [...new Set(data.images
+        const parentFolders = [...new Set(galleryData.images
             .map((img: ImageMetadata) => img.parentFolder)
             .filter(Boolean))];
         

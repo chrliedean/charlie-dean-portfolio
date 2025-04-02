@@ -1,4 +1,6 @@
-{
+
+// This file is auto-generated - do not edit
+export const galleryData = {
   "images": [
     {
       "path": "/img/Menu-bar-resizer.png",
@@ -368,4 +370,4 @@
       "parentFolder": "ui"
     }
   ]
-}
+};

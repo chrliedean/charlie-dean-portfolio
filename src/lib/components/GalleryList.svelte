@@ -101,18 +101,28 @@
     error = null;
 
     try {
-      const response = await fetch(
-        `/api/gallery?folder=${encodeURIComponent(folderPath)}&page=${currentPage}&pageSize=${pageSize}`
-      );
+      // Encode the folder path properly
+      const encodedPath = encodeURIComponent(folderPath);
+      const apiUrl = `/api/gallery?folder=${encodedPath}&page=${currentPage}&pageSize=${pageSize}`;
+      
+      console.log(`Fetching images from: ${apiUrl}`);
+      const response = await fetch(apiUrl);
 
-      if (!response.ok) throw new Error("Failed to fetch images");
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API error (${response.status}): ${errorText}`);
+        throw new Error(`Failed to fetch images: ${response.status} ${response.statusText}`);
+      }
 
       const data = await response.json();
+      console.log(`Received ${data.images.length} images, total: ${data.total}`);
+      
       images = [...images, ...data.images];
       hasMore = data.hasMore;
       folders = data.folders;
       parentFolders = data.parentFolders;
     } catch (e) {
+      console.error('Gallery fetch error:', e);
       error = e instanceof Error ? e.message : "Failed to load images";
     } finally {
       isLoading = false;

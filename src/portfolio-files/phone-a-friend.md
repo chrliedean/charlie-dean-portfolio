@@ -18,5 +18,5 @@ Phone-A-Friend aims to facilitate spontaneous (and often awkward) conversations 
 
 From September 8, 2021 to Semtember 28, 2021, the piece was on display at the [Chicago Garden](https://ars.electronica.art/newdigitaldeal/en/where-we-emerge-exhibition/) of the [ARS Electronica festival](https://ars.electronica.art/news/en/).
 
-<GalleryList folderPath="/img/portfolio/phone-a-friend/" pageSize={6}/>
+<GalleryList folderPath="/portfolio/phone-a-friend/" pageSize={6}/>
 
