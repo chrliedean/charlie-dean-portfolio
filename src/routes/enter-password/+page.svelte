@@ -9,10 +9,18 @@ resizable: false,
 </script>
 <script lang="ts">
   import { getContext } from 'svelte';
+  import { onMount } from 'svelte';
+  import { soundCommand } from '$lib/components/SoundEffects.svelte';
 
   // Retrieve the closeWindow function and windowId from context.
   const closeWindow = getContext('windowManager') as (id: string) => void;
   const windowId = getContext('windowId') as string;
+
+  let password = '';
+
+  onMount(() => {
+    soundCommand.set('sosumi');
+  });
 </script>
 
 

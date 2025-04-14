@@ -1,6 +1,7 @@
 <script lang="ts">
     import DesktopIcon from "./DesktopIcon.svelte";
     import { onMount } from "svelte";
+    import { defocusAllWindows } from "$lib/state/windowState.svelte";
 
     let icons = [
         { icon: "folder", label: "Portfolio", href: "/portfolio" },
@@ -25,9 +26,16 @@
             };
         });
     });
+
+    function handleDesktopClick(event: MouseEvent) {
+        // Only defocus if clicking directly on the desktop (not on an icon)
+        if (event.target === event.currentTarget) {
+            defocusAllWindows();
+        }
+    }
 </script>
 
-<div class="desktop">
+<div class="desktop" on:click={handleDesktopClick}>
     {#each icons as icon, index}
         <DesktopIcon
             icon={icon.icon}

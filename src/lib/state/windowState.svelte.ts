@@ -23,6 +23,17 @@ export function addWindow(window: WindowEntry) {
     focusWindow(window.id);
 }
 
+export function defocusAllWindows() {
+    focusedWindowId = null;
+    // Update all windows to be inactive
+    windows.forEach(w => {
+        if (w.ref?.classList) {
+            w.ref.classList.remove('active');
+            w.ref.classList.add('inactive');
+        }
+    });
+}
+
 export function removeWindow(id: string) {
     // Find the index of the window being removed
     const removedIndex = windows.findIndex(w => w.id === id);

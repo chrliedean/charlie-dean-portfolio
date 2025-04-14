@@ -519,10 +519,33 @@
     const screenHeight = window.innerHeight;
     const currentLeft = windowEl.offsetLeft;
     const currentTop = windowEl.offsetTop;
+
+    // First, handle position clamping
     const clampedLeft = Math.min(currentLeft, screenWidth - winWidth);
     const clampedTop = Math.min(currentTop, screenHeight - winHeight);
     windowEl.style.left = `${Math.max(0, clampedLeft)}px`;
     windowEl.style.top = `${Math.max(topPadding, clampedTop)}px`;
+
+    // Then, handle size clamping if window is too large
+    let newWidth = winWidth;
+    let newHeight = winHeight;
+
+    // If window is wider than viewport, resize it
+    if (winWidth > screenWidth) {
+      newWidth = Math.max(minWidth, screenWidth - padding * 2);
+    }
+
+    // If window is taller than viewport, resize it
+    if (winHeight > screenHeight - topPadding) {
+      newHeight = Math.max(minHeight, screenHeight - topPadding - padding * 2);
+    }
+
+    // Only apply size changes if they're different from current size
+    if (newWidth !== winWidth || newHeight !== winHeight) {
+      windowEl.style.width = `${newWidth}px`;
+      windowEl.style.height = `${newHeight}px`;
+      updateWindowState();
+    }
   }
 
   let isResizing = false;

@@ -182,7 +182,6 @@
       
       // Ensure the window has a valid ref before focusing
       if (!existingWindow.ref) {
-        console.warn(`⚠️ Window ${route} has no ref, waiting for next tick`);
         await tick();
       }
       

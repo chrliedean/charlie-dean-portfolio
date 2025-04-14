@@ -15,7 +15,8 @@
     | "wzmi"
     | "wzmo"
     | "dscr1"
-    | "dscr2";
+    | "dscr2"
+    | "sosumi";
   export const soundCommand = writable<SoundCommand | null>(null);
 </script>
 
@@ -106,6 +107,7 @@
         load("wzmo", "/media/wzmo.mp3", 0.4),
         load("dscr1", "/media/dscr1.mp3", 0.4),
         load("dscr2", "/media/dscr2.mp3", 0.4),
+        load("sosumi", "/media/sosumi.mp3", 0.4),
       ]);
     })();
 
@@ -154,6 +156,9 @@
           break;
         case "dscr2":
           play("dscr2");
+          break;
+        case "sosumi":
+          play("sosumi");
           break;
         case "stopall":
           stopAllSounds();
