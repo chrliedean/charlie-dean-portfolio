@@ -66,7 +66,7 @@ export function updateWindow(id: string, updates: Partial<WindowEntry>) {
 
 // Main focus function that handles both state and visual updates
 export function focusWindow(id: string) {
-    console.log("🪟 windowState called focusWindow", id);
+    // console.log("🪟 windowState called focusWindow", id);
     
     // Find the window
     const win = windows.find((w) => w.id === id);
@@ -157,12 +157,17 @@ export function focusWindow(id: string) {
     });
 
     // Log final window state
-    console.log("📊 Final window state:", windows.map(w => ({
-        id: w.id,
-        focused: w.id === id,
-        hasRef: !!w.ref,
-        style: w.style
-    })));
+    // console.log("📊 Final window state:", windows.map(w => ({
+    //     id: w.id,
+    //     focused: w.id === id,
+    //     hasRef: !!w.ref,
+    //     style: w.style
+    // })));
+
+    // Update document title based on focused window
+    if (browser && win.title) {
+        document.title = `${win.title} - Charlie Dean`;
+    }
 }
 
 export function initializeWindows(initialWindows: WindowEntry[]) {

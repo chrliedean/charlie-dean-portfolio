@@ -105,7 +105,7 @@
       const encodedPath = encodeURIComponent(folderPath);
       const apiUrl = `/api/gallery?folder=${encodedPath}&page=${currentPage}&pageSize=${pageSize}`;
       
-      console.log(`Fetching images from: ${apiUrl}`);
+      // console.log(`Fetching images from: ${apiUrl}`);
       const response = await fetch(apiUrl);
 
       if (!response.ok) {
@@ -115,7 +115,7 @@
       }
 
       const data = await response.json();
-      console.log(`Received ${data.images.length} images, total: ${data.total}`);
+      // console.log(`Received ${data.images.length} images, total: ${data.total}`);
       
       images = [...images, ...data.images];
       hasMore = data.hasMore;

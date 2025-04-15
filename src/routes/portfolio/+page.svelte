@@ -104,6 +104,14 @@
   }
 </script>
 
+<svelte:head>
+  <title>Portfolio - Charlie Dean</title>
+  <meta
+    name="description"
+    content="A list of Charlie Dean's projects."
+  />
+</svelte:head>
+
 <section>
   {#if sortedPosts.length > 0}
     <table class="file-list">

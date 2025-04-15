@@ -193,12 +193,12 @@
     // Set the ref to the windowEl
     ref = windowEl;
     
-    console.log(`🪟 Window mounted for ${id}`, {
-      hasComponent: !!$$slots.default,
-      data: $$props.data,
-      hasRef: !!ref,
-      refElement: ref
-    });
+    // console.log(`🪟 Window mounted for ${id}`, {
+    //   hasComponent: !!$$slots.default,
+    //   data: $$props.data,
+    //   hasRef: !!ref,
+    //   refElement: ref
+    // });
     
     // Start with a proper z-index
     zIndex = ++highestZIndex;
@@ -244,7 +244,7 @@
     document.addEventListener('lightboxMode', handleLightboxMode as EventListener);
     
     return () => {
-      console.log(`🧹 Cleaning up window: ${id}`);
+      // console.log(`🧹 Cleaning up window: ${id}`);
       removeEventHandlers();
       // Clear the ref when unmounting
       ref = null;

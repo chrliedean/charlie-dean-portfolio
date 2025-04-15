@@ -181,7 +181,7 @@
 </script>
 
 <svelte:head>
-  <title>Charlie Dean - E - Charlie</title>
+  <title>E-Charlie - Charlie Dean</title>
   <meta
     name="description"
     content="E-Charlie is a virtual assistant based on the artist Charlie Dean."

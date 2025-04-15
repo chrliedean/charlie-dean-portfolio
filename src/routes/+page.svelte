@@ -14,10 +14,10 @@
 </script>
 
 <svelte:head>
-  <title>Charlie Dean - Home</title>
+  <title>Charlie Dean</title>
   <meta
     name="description"
-    content="This is where the description goes for SEO"
+    content="Charlie Dean is an artist and fabricator working in Chicago, Illinois."
   />
 </svelte:head>
 <article>
@@ -32,10 +32,12 @@
     </p>
   </hgroup>
   <div class="prose">
+    <div class="container">
     <SmartLink href="/portfolio" classname="button primary w-button"
       >Open Portfolio</SmartLink
     >
     <SmartLink href="/client-work" classname="button w-button">View Client Work</SmartLink>
+    </div>
     <figure>
       <enhanced:img
         src="/static/img/donotuse.avif"

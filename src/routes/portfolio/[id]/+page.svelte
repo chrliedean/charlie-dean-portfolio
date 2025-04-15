@@ -47,7 +47,7 @@
   </script>
   
   <svelte:head>
-    <title>{pageData?.meta?.title || 'Portfolio Post'}</title>
+    <title>{pageData?.meta?.title || 'Portfolio Post'} - Charlie Dean</title>
     <meta property="og:type" content="article" />
     <meta property="og:title" content={pageData?.meta?.title || 'Portfolio Post'} />
   </svelte:head>

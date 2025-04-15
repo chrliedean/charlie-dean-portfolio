@@ -171,6 +171,13 @@ export const galleryData = {
       "parentFolder": "icns"
     },
     {
+      "path": "/img/icns/webpage.png",
+      "alt": "webpage",
+      "filename": "webpage.png",
+      "folder": "/icns",
+      "parentFolder": "icns"
+    },
+    {
       "path": "/img/icns/website.png",
       "alt": "website",
       "filename": "website.png",
@@ -183,6 +190,34 @@ export const galleryData = {
       "filename": "charlie.jpg",
       "folder": "/pages",
       "parentFolder": "pages"
+    },
+    {
+      "path": "/img/portfolio/facman/facman-1.avif",
+      "alt": "facman-1",
+      "filename": "facman-1.avif",
+      "folder": "/portfolio/facman",
+      "parentFolder": "portfolio"
+    },
+    {
+      "path": "/img/portfolio/facman/facman-2.avif",
+      "alt": "facman-2",
+      "filename": "facman-2.avif",
+      "folder": "/portfolio/facman",
+      "parentFolder": "portfolio"
+    },
+    {
+      "path": "/img/portfolio/facman/facman-3.avif",
+      "alt": "facman-3",
+      "filename": "facman-3.avif",
+      "folder": "/portfolio/facman",
+      "parentFolder": "portfolio"
+    },
+    {
+      "path": "/img/portfolio/facman/facman-4.avif",
+      "alt": "facman-4",
+      "filename": "facman-4.avif",
+      "folder": "/portfolio/facman",
+      "parentFolder": "portfolio"
     },
     {
       "path": "/img/portfolio/im-only-sleeping/im-only-sleeping-01.avif",

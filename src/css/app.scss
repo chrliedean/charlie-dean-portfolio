@@ -346,6 +346,12 @@ input {
       font-family: "Apple Garamond", serif;
     }
 
+    .prose .container {
+      max-width: 600px;
+      margin: 0 auto;
+      margin-bottom: 1em;
+    }
+
     hgroup {
       user-select: text;
       -webkit-user-select: text;
@@ -546,6 +552,7 @@ article {
       @include bevel($g100, $g600);
       user-select: none;
       -webkit-user-select: none;
+      text-wrap: nowrap;
       position: sticky;
       top: 0;
       background: $g400;

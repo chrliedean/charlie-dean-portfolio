@@ -39,6 +39,14 @@
     time = `${hours}:${minsStr} ${ampm}`;
   }
 
+  // Function to truncate window titles
+  function truncateTitle(title: string): string {
+    if (title.length > 18) {
+      return title.substring(0, 18) + '...';
+    }
+    return title;
+  }
+
   // Update every minute
   const interval = setInterval(updateTime, 1000);
   updateTime();
@@ -307,9 +315,9 @@
             {#if focusedWindow.icon}
               <Icon name={focusedWindow.icon} size="1em" />
             {/if}
-            {focusedWindow.title || "Untitled Window"}
+            {truncateTitle(focusedWindow.title || "Untitled Window")}
           {:else}
-            No Windows Open
+            Website
           {/if}
         </div>
       </div>
@@ -320,7 +328,7 @@
             {#if win.icon}
               <Icon name={win.icon} size="1em" />
             {/if}
-            {win.title}
+            {truncateTitle(win.title || "Untitled Window")}
           </SmartLink>
         {/each}
       </nav>

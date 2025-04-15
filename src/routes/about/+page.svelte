@@ -10,7 +10,7 @@
 </script>
 
 <svelte:head>
-  <title>Charlie Dean - About</title>
+  <title>About - Charlie Dean</title>
   <meta
     name="description"
     content="This is where the description goes for SEO"

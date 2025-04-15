@@ -32,32 +32,14 @@
   }
 
   onMount(() => {
-    console.log("🪟 WindowManager mounted");
+    //console.log("🪟 WindowManager mounted");
     
-
     window.addEventListener("mousedown", recordOrigin);
     return () => {
       window.removeEventListener("mousedown", recordOrigin);
-      console.log("🪟 WindowManager unmounted");
+      //console.log("🪟 WindowManager unmounted");
     };
   });
-
-  // -------------------------------
-  // Helper: Load saved window state from localStorage
-  // -------------------------------
-  function loadSavedState(): any[] {
-    if (typeof localStorage !== "undefined") {
-      const saved = localStorage.getItem("openWindows");
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (error) {
-          console.error("Error parsing saved windows state", error);
-        }
-      }
-    }
-    return [];
-  }
 
   //-------------------------
   // Helper: Normalize route
@@ -66,55 +48,6 @@
     return route;
   }
 
-  // -------------------------------
-  // Merge dynamic config with saved state
-  // -------------------------------
-  const savedState: any[] = loadSavedState();
-  let mergedWindows: WindowEntry[] = savedState
-    .filter((saved) => {
-      const normRoute = normalizeRoute(saved.route);
-
-      // Check if this is a portfolio post
-      if (normRoute.startsWith("/portfolio/") && normRoute !== "/portfolio") {
-        // Keep valid portfolio posts - we'll just need to ensure
-        // the component is correctly loaded for them
-        return true;
-      }
-
-      // For standard routes, check if they exist in windowConfig
-      return windowConfig[normRoute] !== undefined;
-    })
-    .map((saved) => {
-      const normRoute = normalizeRoute(saved.route);
-
-      // For portfolio posts, use the [id] config
-      if (normRoute.startsWith("/portfolio/") && normRoute !== "/portfolio") {
-        const baseConfig = windowConfig["/portfolio/[id]"];
-        if (baseConfig) {
-          // Return a merged config that preserves the unique ID and route
-          return {
-            ...baseConfig,
-            ...saved,
-            id: normRoute,
-            route: normRoute,
-            ref: null,
-          };
-        }
-      }
-
-      // For standard routes, use the normal config
-      const config = windowConfig[normRoute];
-      return {
-        ...config,
-        ...saved,
-        id: normRoute,
-        route: normRoute,
-        ref: null,
-      };
-    });
-
-  // Initialize store with merged windows.
-  initializeWindows(mergedWindows);
   // -------------------------------
   // Helper: Update document title based on focused window
   // -------------------------------
@@ -202,27 +135,27 @@
           // Create a unique config for this portfolio item
           const portfolioConfig = {
             ...baseConfig,
-            id: route, // Use the full route as the unique ID
+            id: route,
             route: route,
             title: currentPageData?.meta?.title || `Loading ${postId}...`,
-            // Use the icon from the portfolio post's metadata, or fall back to the base config's icon
             icon: currentPageData?.meta?.icon || baseConfig.icon || "folder",
-            // Keep the original component function
             component: baseConfig.component,
-            // Add any additional metadata from the post
             data: currentPageData,
-            // Add the click origin for animation
             xyorigin: lastOrigin || undefined
           };
  
           baseConfig = portfolioConfig;
         } else {
           console.error(`❌ No base config found for dynamic route at /portfolio/[id]`);
-          return;
+          // Fall back to error window
+          baseConfig = windowConfig['/error'];
+          route = '/error';
         }
       } else {
-        console.log("404 - no page for route:", route);
-        return;
+        //console.log("404 - no page for route:", route);
+        // Use error window for unknown routes
+        baseConfig = windowConfig['/error'];
+        route = '/error';
       }
     }
 
@@ -233,16 +166,15 @@
       route: route,
       ref: null,
       data: currentPageData,
-      // Add the click origin for animation
       xyorigin: lastOrigin || undefined
     };
 
-    console.log(`➕ Adding new window: ${route}`, {
-      hasComponent: !!newWindow.component,
-      data: newWindow.data,
-      xyorigin: newWindow.xyorigin,
-      icon: newWindow.icon
-    });
+    // console.log(`➕ Adding new window: ${route}`, {
+    //   hasComponent: !!newWindow.component,
+    //   data: newWindow.data,
+    //   xyorigin: newWindow.xyorigin,
+    //   icon: newWindow.icon
+    // });
     addWindow(newWindow);
     
     // Ensure focus is set after adding the window
@@ -261,20 +193,6 @@
     });
     return unsubscribe;
   });
-
-  // Save windows state to localStorage whenever it changes
-  $: {
-    if (browser && getWindows().length > 0) {
-      const serializable = getWindows().map(win => ({
-        id: win.id,
-        route: win.route,
-        currentSize: win.currentSize,
-        currentPosition: win.currentPosition,
-        minimized: win.minimized,
-      }));
-      localStorage.setItem('openWindows', JSON.stringify(serializable));
-    }
-  }
 
   // -------------------------------
   // Additional Window Functions (optional)
