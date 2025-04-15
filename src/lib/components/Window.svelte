@@ -709,7 +709,7 @@
         <div class="horizontal-window-stripe"></div>
       </div>
       <h1 class="window-title">
-        {#if icon}
+        {#if icon && icon !== "null"}
           <Icon name={icon} size="1em" />
         {/if}
         {title}

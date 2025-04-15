@@ -7,7 +7,7 @@ medium: Single channel video, 2 minutes 36 seconds
 categories:
   - Video
 published: true
-icon: clip
+icon: movie
 ---
 <script>
   import Video from '$lib/components/Video.svelte'

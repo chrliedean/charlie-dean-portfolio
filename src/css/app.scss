@@ -391,22 +391,26 @@ input {
         font-stretch: 100%;
       }
 
-      p a {
-        color: $colors-green;
-        text-decoration: underline;
-        text-decoration-style: dotted;
+      p {
+        a {
+          color: $colors-green;
+          text-decoration: underline;
+          text-decoration-style: dotted;
+        }
+        a:hover, a:focus {
+          text-decoration: none;
+          background-color: $colors-green;
+          color: $g100;
+        }
+
+          a:active {
+            color: $colors-green;
+            background-color: transparent;
+          }
+
       }
 
-      p a:hover, a:focus {
-        text-decoration: none;
-        background-color: $colors-green;
-        color: $g100;
-      }
-
-      p a:active {
-        color: $colors-green;
-        background-color: transparent;
-      }
+  
 
       p {
         font-size: 20px;

@@ -68,6 +68,7 @@
     try {
       // First try to get the post data through the API
       const response = await fetch(`/api/portfolio-files/${postId}`);
+      console.log(`🔍 Loading post ${postId} from API`);
       if (response.ok) {
         const data = await response.json();
         return data;
@@ -99,10 +100,10 @@
 
   async function handleRouteChange(route: string) {
     route = normalizeRoute(route);
-
+    console.log("🔍 Handling route change for:", route);
     // Get current page data from the SvelteKit store
     const currentPageData = get(page).data;
-
+    console.log("🔍 Current page data:", currentPageData);
     // Check if this window is already open
     const existingWindow = getWindows().find(w => w.id === route);
     

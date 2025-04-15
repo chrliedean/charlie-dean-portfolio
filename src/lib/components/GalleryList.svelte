@@ -105,7 +105,7 @@
       const encodedPath = encodeURIComponent(folderPath);
       const apiUrl = `/api/gallery?folder=${encodedPath}&page=${currentPage}&pageSize=${pageSize}`;
       
-      // console.log(`Fetching images from: ${apiUrl}`);
+       console.log(`Fetching images from: ${apiUrl}`);
       const response = await fetch(apiUrl);
 
       if (!response.ok) {

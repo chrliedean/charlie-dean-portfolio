@@ -248,9 +248,9 @@
         <div class="menubar-item-contents">Client Work</div>
       </div>
       <nav class="dropdown-menu w-dropdown-list" role="menu">
-        <a href="#" class="dropdown-link w-dropdown-link" role="menuitem">
+        <SmartLink href="/client-work" classname="dropdown-link w-dropdown-link" role="menuitem">
           View Client Work
-        </a>
+        </SmartLink>
       </nav>
     </Dropdown>
 

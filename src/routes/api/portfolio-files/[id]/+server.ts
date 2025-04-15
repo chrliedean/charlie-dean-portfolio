@@ -7,6 +7,7 @@ import { json, error } from '@sveltejs/kit';
 export async function GET({ params }) {
   try {
     const { id } = params;
+    console.log("🔍 Getting post metadata for:", id);
     
     // Import the markdown file
     const post = await import(`/src/portfolio-files/${id}.md`);

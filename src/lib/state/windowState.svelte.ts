@@ -66,7 +66,7 @@ export function updateWindow(id: string, updates: Partial<WindowEntry>) {
 
 // Main focus function that handles both state and visual updates
 export function focusWindow(id: string) {
-    // console.log("🪟 windowState called focusWindow", id);
+    console.log("🪟 windowState called focusWindow", id);
     
     // Find the window
     const win = windows.find((w) => w.id === id);

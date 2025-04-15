@@ -14,6 +14,7 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
+  import { beforeNavigate } from "$app/navigation";
 
   // Reference to the rapport-scene element
   let scene: RapportSceneElement;
@@ -23,6 +24,8 @@
   // State to track loading status
   let isLoading = true;
   let currentTarget = "";
+  // Flag to track if navigation is happening
+  let isNavigating = false;
 
   // Mouse position tracking
   let mouseX = 0;
@@ -63,9 +66,9 @@
     };
 
     // Update camera if the scene has been initialized
-    if (scene.setAttribute) {
-      scene.setAttribute("camera-position", JSON.stringify(newCameraPosition));
-    }
+    // if (scene.setAttribute) {
+    //   scene.setAttribute("camera-position", JSON.stringify(newCameraPosition));
+    // }
   }
 
   // Function to request microphone permissions and start the session
@@ -80,35 +83,18 @@
     // Save to localStorage that user has granted permission
     localStorage.setItem('eCharlieMicPermissionGranted', 'true');
     
+    // Clear previous event listeners to avoid duplicates
+    // which can cause errors when navigating back to the component
+    try {
+      scene.removeEventListener("aiMessage", handleAiMessage);
+      scene.removeEventListener("ttsStart", handleTtsStart);
+    } catch (e) {
+      // Ignore errors if listeners weren't attached
+    }
+    
     // Set up AI message handling
-    scene.addEventListener("aiMessage", (e) => {
-      const event = e as CustomEvent;
-      const aiText = event.detail.params.text || "";
-      console.log("AI message received:", aiText);
-
-      // removes text contained in asterisks from aiText
-      const cleanedText = aiText.replace(/\*(.*?)\*/g, "").trim();
-      scene.modules.tts.sendText(cleanedText);
-
-      // Check if the text contains a command to navigate and does so
-      const match = aiText.match(/\*(.*?)\*/);
-      if (match && match[1]) {
-        const target = match[1].trim();
-        currentTarget = target;
-        // console.log("Navigating to:", target);
-        // goto(`${target}`);
-      }
-    });
-
-    scene.addEventListener("ttsStart", (e) => {
-      const event = e as CustomEvent;
-      const ttsText = event.detail.text || "";
-      console.log("TTS started:", ttsText);
-      if (currentTarget !== "") {
-         console.log("Navigating to:", currentTarget);
-         goto(`${currentTarget}`);
-      }
-    });
+    scene.addEventListener("aiMessage", handleAiMessage);
+    scene.addEventListener("ttsStart", handleTtsStart);
     
     // Now initialize the session which will trigger the permission request
     scene.sessionRequest({
@@ -126,7 +112,7 @@
 
         // Autoplay "first_and_only_command"
         if (
-          scene.modules.commands.data.commands.includes(
+          scene.modules?.commands?.data?.commands?.includes(
             "first_and_only_command"
           )
         ) {
@@ -143,6 +129,103 @@
         console.log("Session disconnected from rapport-scene");
       },
     });
+  }
+  
+  // Add navigation guard
+  beforeNavigate(() => {
+    isNavigating = true;
+    
+    // Attempt to stop TTS and clean up scene resources
+    if (scene) {
+      try {
+        // Try to stop any current TTS
+        if (scene.modules?.tts && 'stop' in scene.modules.tts) {
+          console.log("Stopping TTS before navigation");
+          (scene.modules.tts as any).stop();
+        }
+        
+        // Remove event listeners
+        scene.removeEventListener("aiMessage", handleAiMessage);
+        scene.removeEventListener("ttsStart", handleTtsStart);
+      } catch (e) {
+        console.warn("Error during navigation cleanup:", e);
+      }
+    }
+  });
+
+  // Extracted event handlers to separate functions for cleanup
+  function handleAiMessage(e: Event) {
+    // Don't process if currently navigating
+    if (isNavigating) return;
+    
+    const event = e as CustomEvent;
+    const aiText = event.detail.params.text || "";
+    console.log("AI message received:", aiText);
+
+    // removes text contained in asterisks from aiText
+    const cleanedText = aiText.replace(/\*(.*?)\*/g, "").trim();
+    
+    // Check if TTS module is available before sending text
+    if (!isNavigating && scene?.modules?.tts?.sendText) {
+      try {
+        scene.modules.tts.sendText(cleanedText);
+      } catch (e) {
+        console.warn("Error sending text to TTS:", e);
+      }
+    } else {
+      console.warn("TTS module not available or navigation in progress");
+    }
+
+    // Check if the text contains a command to navigate and does so
+    const match = aiText.match(/\*(.*?)\*/);
+    if (match && match[1]) {
+      const target = match[1].trim();
+      // Validate the target is not null or empty
+      if (target && target !== "null") {
+        currentTarget = target;
+        console.log("Navigation target set:", target);
+      } else {
+        console.warn("Invalid navigation target detected:", target);
+        currentTarget = "";
+      }
+    }
+  }
+  
+  function handleTtsStart(e: Event) {
+    // Don't process if currently navigating
+    if (isNavigating) return;
+    
+    const event = e as CustomEvent;
+    const ttsText = event.detail.text || "";
+    console.log("TTS started:", ttsText);
+    
+    if (currentTarget !== "") {
+      console.log("Navigating to:", currentTarget);
+      
+      // Mark as navigating before actual navigation
+      isNavigating = true;
+      
+      // Stop TTS before navigation if possible
+      if (scene?.modules?.tts && 'stop' in scene.modules.tts) {
+        try {
+          (scene.modules.tts as any).stop();
+        } catch (e) {
+          console.warn("Error stopping TTS:", e);
+        }
+      }
+      
+      // Small delay to allow TTS to stop
+      setTimeout(() => {
+        // Check if target is valid before navigating
+        if (currentTarget.startsWith('/')) {
+          goto(`${currentTarget}`);
+        } else {
+          goto(`/${currentTarget}`);
+        }
+        // Reset current target after navigation
+        currentTarget = "";
+      }, 100);
+    }
   }
 
   // Function to check if microphone permissions are already granted
@@ -166,6 +249,45 @@
   }
 
   onMount(() => {
+    // Reset navigation flag
+    isNavigating = false;
+    
+    // Debug: Look for images being loaded
+    if (typeof window !== 'undefined') {
+      const originalFetch = window.fetch;
+      (window as any).fetch = function(input: RequestInfo | URL, init?: RequestInit) {
+        if (typeof input === 'string' && 
+           (input.includes('null') || input === '/null')) {
+          console.error('Attempting to fetch from null URL:', input, new Error().stack);
+        }
+        return originalFetch.call(this, input, init);
+      };
+      
+      // Also intercept Image constructor
+      const originalImage = window.Image;
+      (window as any).Image = function(width?: number, height?: number) {
+        const img = new originalImage(width, height);
+        const originalSrcSetter = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src')?.set;
+        
+        if (originalSrcSetter) {
+          Object.defineProperty(img, 'src', {
+            set(value) {
+              if (value === null || value === 'null' || value === '/null') {
+                console.error('Setting null image src', new Error().stack);
+              }
+              originalSrcSetter.call(this, value);
+            },
+            get: Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src')?.get
+          });
+        }
+        return img;
+      };
+      
+      // Store original functions for cleanup
+      (window as any).originalFetch = originalFetch;
+      (window as any).originalImage = originalImage;
+    }
+    
     // Wait until the custom element is defined/upgraded
     customElements.whenDefined("rapport-scene").then(() => {
       console.log("Rapport scene element defined, checking microphone permission");
@@ -175,7 +297,32 @@
     
     // Cleanup function to remove event listeners when component is destroyed
     return () => {
+      // Restore original fetch and Image if we modified them
+      if (typeof window !== 'undefined') {
+        if ((window as any).originalFetch) {
+          window.fetch = (window as any).originalFetch;
+        }
+        if ((window as any).originalImage) {
+          window.Image = (window as any).originalImage;
+        }
+      }
+      
       window.removeEventListener("mousemove", handleMouseMove);
+      
+      // Clean up rapport event listeners
+      if (scene) {
+        try {
+          // Try to stop any current TTS
+          if (scene.modules?.tts && 'stop' in scene.modules.tts) {
+            (scene.modules.tts as any).stop();
+          }
+          
+          scene.removeEventListener("aiMessage", handleAiMessage);
+          scene.removeEventListener("ttsStart", handleTtsStart);
+        } catch (e) {
+          // Ignore errors during cleanup
+        }
+      }
     };
   });
 </script>
