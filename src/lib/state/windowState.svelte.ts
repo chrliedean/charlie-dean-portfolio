@@ -1,3 +1,4 @@
+// src/lib/state/windowState.svelte.ts
 import { browser } from '$app/environment';
 import type { WindowEntry } from '../types/window';
 import { goto, disableScrollHandling, afterNavigate } from "$app/navigation";
@@ -7,6 +8,8 @@ import { tick } from "svelte";
 let windows = $state<WindowEntry[]>([]);
 let focusedWindowId = $state<string | null>(null);
 let shouldDisableScroll = $state(false);
+// --- NEW: State to track the highest z-index assigned ---
+let highestZIndex = $state(100); // Start at base z-index
 
 // Getters
 export function getWindows() {
@@ -19,8 +22,15 @@ export function getFocusedWindow() {
 
 // Actions
 export function addWindow(window: WindowEntry) {
-    windows = [...windows, window];
-    focusWindow(window.id);
+    // When adding a window, assign it the current highest z-index + 1 initially
+    highestZIndex += 1;
+    const windowWithZ = { ...window, initialZ: highestZIndex }; // Store initial z? might not be needed
+
+    // Add to array (order doesn't matter as much for rendering now)
+    windows = [...windows, windowWithZ];
+
+    // Focus the new window (which will also set its final z-index)
+    focusWindow(window.id); 
 }
 
 export function defocusAllWindows() {
@@ -30,81 +40,109 @@ export function defocusAllWindows() {
         if (w.ref?.classList) {
             w.ref.classList.remove('active');
             w.ref.classList.add('inactive');
+            // Optionally reset z-index to a base level? Or leave them stacked?
+            // Leaving them stacked might be visually better.
         }
     });
 }
 
 export function removeWindow(id: string) {
-    // Find the index of the window being removed
-    const removedIndex = windows.findIndex(w => w.id === id);
-    
-    // Remove the window
+    const windowToRemove = windows.find(w => w.id === id);
+    if (!windowToRemove) return;
+
+    const removedZIndex = parseInt(windowToRemove.ref?.style.zIndex || '0');
+
+    // Remove the window from the array
     windows = windows.filter(w => w.id !== id);
     
-    // If the removed window was focused, focus the window behind it
+    // If the removed window was focused, focus the window with the next highest z-index
     if (focusedWindowId === id) {
-        // If there are windows left and the removed window wasn't the last one,
-        // focus the window that was behind it
-        if (windows.length > 0 && removedIndex > 0) {
-            const windowBehind = windows[removedIndex - 1];
-            focusWindow(windowBehind.id);
-        } else if (windows.length > 0) {
-            // If the removed window was the last one, focus the new last window
-            focusWindow(windows[windows.length - 1].id);
+        if (windows.length > 0) {
+            // Find the window with the highest z-index among the remaining ones
+            let nextFocusedWindow = windows[0];
+            let maxZ = 0;
+            windows.forEach(w => {
+                const currentZ = parseInt(w.ref?.style.zIndex || '0');
+                if (currentZ > maxZ) {
+                    maxZ = currentZ;
+                    nextFocusedWindow = w;
+                }
+            });
+            if (nextFocusedWindow) {
+                focusWindow(nextFocusedWindow.id); // Focus window with highest Z
+            } else {
+                 focusedWindowId = null; // No windows left or error finding max Z
+            }
         } else {
-            // If no windows left, clear focus
+            // If no windows left, clear focus and reset base z-index
             focusedWindowId = null;
+            highestZIndex = 100; // Reset base z-index
         }
     }
+
+    // Optional: Reset highestZIndex if the removed window had the highest value
+    // This prevents z-index from growing indefinitely if not needed.
+    if (windows.length === 0) {
+         highestZIndex = 100;
+    } else if (removedZIndex === highestZIndex) {
+        // Find the new highest z-index among remaining windows
+        highestZIndex = Math.max(100, ...windows.map(w => parseInt(w.ref?.style.zIndex || '0')));
+    }
+
 }
 
 export function updateWindow(id: string, updates: Partial<WindowEntry>) {
+    // Make sure we don't accidentally overwrite the ref or z-index managed here
+    const { ref, style, ...otherUpdates } = updates; 
     windows = windows.map(w =>
-        w.id === id ? { ...w, ...updates } : w
+        w.id === id ? { ...w, ...otherUpdates } : w
     );
 }
 
-// Main focus function that handles both state and visual updates
+// --- MODIFIED focusWindow ---
 export function focusWindow(id: string) {
-    console.log("🪟 windowState called focusWindow", id);
+    console.log("🪟 windowState called focusWindow (Z-index mode)", id);
     
-    // Find the window
     const win = windows.find((w) => w.id === id);
-    if (!win) {
-        console.error("❌ Window not found:", id);
-        return;
+    if (!win || !win.ref) { // Ensure we have the window and its ref
+        console.error("❌ Window or window ref not found:", id);
+        // Attempt to find ref after tick if not immediately available
+        tick().then(() => {
+             const winAfterTick = windows.find((w) => w.id === id);
+             if (winAfterTick && winAfterTick.ref) {
+                 console.log("Ref found after tick, retrying focus logic for", id)
+                 applyFocusStyles(id);
+             } else {
+                  console.error("❌ Ref still not found after tick for:", id);
+             }
+        });
+        return; 
     }
 
-    // Check if there's an alert window open
-    const alertWindow = windows.find(w => w.style === 'alert');
-    if (alertWindow && alertWindow.id !== id) {
-        // If there's an alert window and we're not focusing it, prevent focus change
-        return;
-    }
+    // Apply the focus styles (active/inactive classes and z-index)
+    applyFocusStyles(id);
 
-    // Store current scroll position of all windows
-    const scrollPositions = new Map<string, number>();
-    windows.forEach(w => {
-        if (w.ref?.querySelector('.window-body')) {
-            const body = w.ref.querySelector('.window-body') as HTMLElement;
-            if (body) {
-                scrollPositions.set(w.id, body.scrollTop);
-            }
-        }
-    });
-
-    // Update focused window state
+    // Update focused window state *after* applying styles
     focusedWindowId = id;
 
-    // Move window to end of array (top of stack)
-    windows = [...windows.filter(w => w.id !== id), win];
-
-    // Only update URL if it doesn't match the current route
+    // --- URL Update Logic (kept from before, still skips /e-charlie if needed) ---
     if (browser && window.location.pathname !== win.route) {
+        // Keep scroll restoration logic if needed, but `goto` might still be risky
+        // Consider if URL sync is truly necessary when focusing e-charlie
         shouldDisableScroll = true;
+        // Store scroll positions before potential navigation
+         const scrollPositions = new Map<string, number>();
+         windows.forEach(w => {
+            if (w.ref?.querySelector('.window-body')) {
+                const body = w.ref.querySelector('.window-body') as HTMLElement;
+                if (body) scrollPositions.set(w.id, body.scrollTop);
+            }
+         });
+
         goto(win.route, { 
             replaceState: true,
-            noScroll: true
+            noScroll: true, // Keep noScroll
+            keepFocus: true // Keep keepfocus
         }).then(() => {
             // Restore scroll positions after navigation completes
             tick().then(() => {
@@ -121,56 +159,54 @@ export function focusWindow(id: string) {
         });
     }
 
-    // Update z-indices for all windows based on their position in the array
-    windows.forEach((w, index) => {
-        if (w.ref?.classList) {
-            // Set z-index based on position (last window gets highest z-index)
-            // Alert windows always get the highest z-index
-            const zIndex = w.style === 'alert' ? 9999 : 100 + index;
-            w.ref.style.zIndex = `${zIndex}`;
-            
-            // Update active/inactive classes
-            if (w.id === id) {
-                w.ref.classList.remove('inactive');
-                w.ref.classList.add('active');
-            } else {
-                w.ref.classList.remove('active');
-                w.ref.classList.add('inactive');
-            }
-        } else {
-            console.warn(`⚠️ Window ${w.id} has no ref, waiting for next tick`);
-            // Wait for next tick to ensure ref is set
-            tick().then(() => {
-                if (w.ref?.classList) {
-                    const zIndex = w.style === 'alert' ? 9999 : 100 + index;
-                    w.ref.style.zIndex = `${zIndex}`;
-                    if (w.id === id) {
-                        w.ref.classList.remove('inactive');
-                        w.ref.classList.add('active');
-                    } else {
-                        w.ref.classList.remove('active');
-                        w.ref.classList.add('inactive');
-                    }
-                }
-            });
-        }
-    });
-
-    // Log final window state
-    // console.log("📊 Final window state:", windows.map(w => ({
-    //     id: w.id,
-    //     focused: w.id === id,
-    //     hasRef: !!w.ref,
-    //     style: w.style
-    // })));
-
-    // Update document title based on focused window
+    // Update document title
     if (browser && win.title) {
         document.title = `${win.title} - Charlie Dean`;
     }
 }
 
-export function initializeWindows(initialWindows: WindowEntry[]) {
-    windows = initialWindows;
+// --- NEW Helper Function to apply styles ---
+function applyFocusStyles(focusedId: string) {
+     const win = windows.find((w) => w.id === focusedId);
+     if (!win || !win.ref) return; // Should have ref here
+
+     // Check for alert window interference
+     const alertWindow = windows.find(w => w.style === 'alert');
+     if (alertWindow && alertWindow.id !== focusedId) {
+        // If there's an alert window and we're not focusing it, prevent style changes
+        console.log("Alert window present, focus change prevented.");
+        return;
+     }
+
+     // --- Z-Index Management ---
+     // Increment highestZIndex *before* assigning it to the newly focused window
+     highestZIndex += 1; 
+     win.ref.style.zIndex = `${highestZIndex}`;
+     console.log(`Assigning z-index ${highestZIndex} to ${focusedId}`);
+
+     // --- Active/Inactive Class Management ---
+     win.ref.classList.remove('inactive');
+     win.ref.classList.add('active');
+
+     // Apply inactive class to all other windows
+     windows.forEach(w => {
+        if (w.id !== focusedId && w.ref) {
+            w.ref.classList.remove('active');
+            w.ref.classList.add('inactive');
+            // We don't need to change their z-index here, they just become inactive below the focused one.
+        }
+     });
 }
 
+
+export function initializeWindows(initialWindows: WindowEntry[]) {
+    // Assign initial z-index when initializing if needed, or rely on addWindow
+    let currentZ = 100;
+    windows = initialWindows.map(w => {
+        currentZ++;
+        // Note: The ref won't exist yet here, will be set later by Svelte's binding
+        // We will set the z-index properly when the window is first focused or added.
+        return { ...w }; 
+    });
+     highestZIndex = currentZ; // Track the highest starting Z
+}

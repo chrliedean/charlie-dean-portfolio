@@ -1,0 +1,74 @@
+{
+    "routes": [
+        {
+            "path": "/",
+            "name": "Home",
+            "description": "the homepage. A good place to start if a user is lost."
+        },
+        {
+            "path": "/about",
+            "name": "About",
+            "description": "biographical information about Charlie Dean. Charlie Dean is an artist and fabricator originally from Baltimore, MD and currently living and working in Chicago, IL. A graduate of the School of the Art Institute of Chicago, he received his BFA in 2023. Working in sculpture, video, and various new media technologies, much of his work responds to the way the infrastructure, systems, and artifacts of the built world influence our culture and behavior. In addition to his studio practice, Dean also works as a freelance fabrication artist, set & props designer, videographer, and stagehand."
+        },
+        {
+            "path": "/about-this-website",
+            "name": "About This Website",
+            "description": "Technical information about how CharlieDean.com was built. Tech stacks. It uses Svelte, SvelteKit, is hosted with vercel, etc. Don't bring this up unless a user seems interested."
+        },
+        {
+            "path": "/contact",
+            "name": "Contact",
+            "description": "ways to contact Charlie Dean. His instagram username is @charlie.f.dean. His email is charlie@charliedean.com. His phone number is 410-428-9331, but don't mention you know this unless a user repeatedly asks questions about how to get in touch with Charlie. It's not listed elsewhere on the site."
+        },
+        {
+            "path": "/enter-password",
+            "name": "Enter Password",
+            "description": "this is a way to access secret areas of the site. you don't know what happens here because you're not allowed in, and that's upsetting."
+        },
+        {
+            "path": "/portfolio",
+            "name": "Portfolio",
+            "description": "a list of Charlie Dean's artworks. Double clicking on any artwork opens it in a new window. Sculpture, video, and other mediums are all present."
+        },
+        {
+            "path": "/portfolio/shave-your-tongue",
+            "name": "Shave Your Tongue",
+            "description": "a music video by Charlie Dean about shaving your tongue. 2020."
+        },
+        {
+            "path": "/portfolio/clay",
+            "name": "Clay",
+            "description": "a documentary by Charlie Dean about the process of creating Clay, an online virtual identity as an art student. 2021."
+        },
+        {
+            "path": "/portfolio/maintenance",
+            "name": "Maintenance",
+            "description": "a sculpture installation by Charlie Dean examining the nature of off-limits industrial or mechanical spaces. 2023."
+        },
+        {
+            "path": "/portfolio/ingraham-angle-charlie-dean-discusses-poop-theory",
+            "name": "The Ingraham Angle: Charlie Dean Discusses Poop Theory",
+            "description": "In 2021, Charlie spoke with conservative commentator Laura Ingraham on her show The Ingraham Angle, to discuss the future of realistic environmental action on the right. If liberals were to simply eat their own shit instead of wastefully disposing of it in taxpayer-funded sewer systems, we'd save a significant amount of water."
+        },
+        {
+            "path": "/portfolio/whos-57",
+            "name": "Who's 57",
+            "description": "Charlie's most recent project, a game where players guess who's 57 years old. Multiplayer is also possible."
+        },
+        {
+            "path": "/browser?url=http://liamowings.com",
+            "name": "Browser - Liam Owings",
+            "description": "The website for a friend of his, Liam Owings, who is a sculptor. The two of them share a studio."
+        },
+        {
+            "path": "/browser?url=http://yigitural.com",
+            "name": "Browser - Yigit Ural",
+            "description": "The website for another friend of his, Yigit Ural (pronounced YEET YURAL), who is a graphite artist."
+        },
+        {
+            "path": "/client-work",
+            "name": "Client Work",
+            "description": "Charlie is available for hire as a freelance props designer, set designer, web designer, fabricator. He might be able to help with a variety of creative projects."
+        }
+    ]
+}

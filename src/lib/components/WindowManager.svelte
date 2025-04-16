@@ -240,6 +240,8 @@
     icon={win.icon}
   >
     <!-- Render the page component defined in the page module -->
+     {#key win.id}
     <svelte:component this={win.component} data={win.data} />
+    {/key}
   </Window>
 {/each}
