@@ -312,9 +312,11 @@
         <div class="menubar-item-contents">
           {#if getFocusedWindow()}
             {@const focusedWindow = getFocusedWindow()!}
+            {#key focusedWindow.icon}
             {#if focusedWindow.icon}
               <Icon name={focusedWindow.icon} size="1em" />
             {/if}
+            {/key}
             {truncateTitle(focusedWindow.title || "Untitled Window")}
           {:else}
             Website
@@ -322,7 +324,7 @@
         </div>
       </div>
 
-      <nav class="dropdown-menu w-dropdown-list" role="menu">
+      <nav class="dropdown-menu w-dropdown-list right-align">
         {#each getWindows() as win (win.id)}
           <SmartLink href={win.route} classname="dropdown-link w-dropdown-link">
             {#if win.icon}

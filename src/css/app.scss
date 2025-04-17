@@ -1171,7 +1171,15 @@ a:visted.button {
   background-color: $g300;
   
   @include bevel($g100, $g600, $shadow: true, $shadow-distance: $line-width, $shadow-color: $g900);
+
+  &.right-align {
+    left: auto;
+    right: 0;
+    width: max-content;
+  }
 }
+
+
 
 .dropdown-link {
   padding: 0px 5px;
