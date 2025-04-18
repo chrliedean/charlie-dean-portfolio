@@ -22,6 +22,13 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
   import { generateSpeech } from "$lib/utils/tts"; // Path to updated tts.ts
   // Import the new helper
   import { generateVisemeTimeline, type VisemeEvent, type WordTiming } from "$lib/utils/visemes"; // Path to helper
+  
+  // Import or define EmojiEvent type
+  // If not defined in visemes.ts, define it here
+  interface EmojiEvent {
+    emoji: string;
+    start_ms: number;
+  }
 
   // --- State ---
   let conversation: Conversation | null = null;
@@ -30,10 +37,14 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
   // Add state for the timeline and audio start time to pass to the avatar
   let currentVisemeTimeline = $state<VisemeEvent[]>([]);
   let audioPlaybackStartTime = $state<number | null>(null);
+  let collectedEmojiEvents = $state<EmojiEvent[]>([]); // Add state for emojis
 
   // Re-introduce AudioContext for playback HERE
   let audioCtx: AudioContext | null = null;
   let currentAudioSource: AudioBufferSourceNode | null = null;
+
+  // Add state for client city
+  let clientCity = $state('')
 
   // --- Speech Function ---
   async function speakAndAnimate(text: string) {
@@ -47,6 +58,7 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
     // Reset state for new utterance
     currentVisemeTimeline = [];
     audioPlaybackStartTime = null;
+    collectedEmojiEvents = []; // Reset emojis for new utterance
     if (currentAudioSource) {
         try { currentAudioSource.stop(); } catch (e) {}
         currentAudioSource = null;
@@ -55,6 +67,7 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
     // --- 1. Collect all TTS data ---
     const collectedPcmChunks: ArrayBuffer[] = [];
     const collectedWordTimings: WordTiming[] = [];
+    const currentEmojiEventsList: EmojiEvent[] = []; // Temporary list for this utterance's emojis
 
     try {
         for await (const chunk of generateSpeech(text)) { //
@@ -64,8 +77,13 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
             if (chunk.wordTimings && chunk.wordTimings.length > 0) {
                 collectedWordTimings.push(...chunk.wordTimings);
             }
+            // Collect emoji events
+            if (chunk.emojiEvents && chunk.emojiEvents.length > 0) {
+                currentEmojiEventsList.push(...chunk.emojiEvents);
+            }
         }
-        console.log(`TTS stream finished. Collected ${collectedPcmChunks.length} audio chunks, ${collectedWordTimings.length} word timings.`);
+        console.log(`TTS stream finished. Collected ${collectedPcmChunks.length} audio chunks, ${collectedWordTimings.length} word timings, ${currentEmojiEventsList.length} emoji events.`);
+        console.log("currentEmojiEventsList", currentEmojiEventsList);
 
         if (collectedPcmChunks.length === 0 || collectedWordTimings.length === 0) {
             console.warn("No audio or word timings collected.");
@@ -76,7 +94,8 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
         // --- 2. Generate Viseme Timeline ---
         const timeline = generateVisemeTimeline(collectedWordTimings); // Call the helper
         currentVisemeTimeline = timeline; // Update state to pass to avatar
-        console.log(`Generated ${timeline.length} viseme events.`);
+        collectedEmojiEvents = currentEmojiEventsList; // Update state with collected emojis
+        console.log(`Generated ${timeline.length} viseme events and ${collectedEmojiEvents.length} emoji events.`);
 
         // --- 3. Prepare and Play Audio ---
         if (!audioCtx) {
@@ -189,10 +208,30 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
 
     audioCtx = new AudioContext();
 
+    // Fetch client city from IP
+    try {
+      const response = await fetch('http://ip-api.com/json/?fields=status,message,city');
+      if (!response.ok) {
+        throw new Error(`IP API request failed with status ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.status === 'success') {
+        clientCity = data.city;
+        console.log(`Client city identified as: ${clientCity}`);
+      } else {
+        console.warn(`IP API query failed: ${data.message}`);
+      }
+    } catch (error) {
+      console.error("Error fetching client city:", error);
+    }
+
     // -------------------------------- INIT ELEVENLABS CONVERSATION --------------------------------
     try {
       conversation = await Conversation.startSession({
         agentId: "JqxSmuRTrGAN7TCUR3ja",
+        dynamicVariables: {
+          client_city: clientCity
+        },
         onMessage: async (message) => {
           console.log("Message received:", message);
           if (message.source === "ai") {
@@ -239,10 +278,12 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
     if (currentAudioSource) {
       try { currentAudioSource.stop(); } catch (e) {}
       currentAudioSource = null;
+      console.log("Audio source stopped");
     }
     if (audioCtx) {
       await audioCtx.close();
       audioCtx = null;
+      console.log("Audio context closed");
     }
 
     if (conversation) {
@@ -252,4 +293,9 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
   });
 </script>
 
-<AnimatedAvatar bind:this={avatar} visemeTimeline={currentVisemeTimeline} audioPlaybackStartTime={audioPlaybackStartTime}/>
+<AnimatedAvatar 
+  bind:this={avatar} 
+  visemeTimeline={currentVisemeTimeline} 
+  audioPlaybackStartTime={audioPlaybackStartTime}
+  emojiEvents={collectedEmojiEvents}
+/>

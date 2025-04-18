@@ -10,11 +10,17 @@
   const modelPath: string = "/charlie-v2.glb";
   const enableTracking: boolean = true;
   const enableBlinking: boolean = true;
-  const enableIdleMovements: boolean = true;
 
-  let { visemeTimeline = [], audioPlaybackStartTime = null } = $props<{
+  // Define EmojiEvent interface here for the component
+  interface EmojiEvent {
+    emoji: string;
+    start_ms: number;
+  }
+
+  let { visemeTimeline = [], audioPlaybackStartTime = null, emojiEvents = [] } = $props<{
     visemeTimeline: VisemeEvent[];
     audioPlaybackStartTime: number | null;
+    emojiEvents: EmojiEvent[];
   }>();
 
   // Noise for idle jitter
@@ -25,6 +31,9 @@
   let glanceTimer: ReturnType<typeof setTimeout> | null = null;
   let glanceOffset = { x: 0, y: 0 };
   let glanceTarget = { x: 0, y: 0 };
+  
+  let disableIdleBlendshapes: boolean = false
+
 
   // DOM container reference
   let container: HTMLDivElement;
@@ -65,7 +74,14 @@
   let currentLook = { x: 0.5, y: 0.5 };
 
   const lipSmoothingSpeed = 15;
+  const emojiSmoothingSpeed = 10; // Can use a different speed for expressions
   let currentVisemeInfluences = $state<Record<string, number>>({});
+  
+  // State for current emoji expression
+  let currentActiveEmoji = $state<EmojiEvent | null>(null); // Track the latest active emoji event
+  let currentEmojiDefinition = $state<any | null>(null); // Store its definition
+
+  let currentEmojiInfluences = $state<Record<string, number>>({}); // Smoothed values for emoji shapes
 
   // Grid background
 
@@ -131,6 +147,47 @@
     CHEEK_PUFF: "cheekPuff",
   };
 
+  const EMOJI_BLENDSHAPES: Record<string, any> = {
+   '😐': { dt: [300,2000], rescale: [0,1], vs: { pose: ['straight'], browInnerUp: [0.4], eyeWideLeft: [0.7], eyeWideRight: [0.7], mouthPressLeft: [0.6], mouthPressRight: [0.6], mouthRollLower: [0.3], mouthStretchLeft: [1], mouthStretchRight: [1] } },
+      '😶': { link:  '😐' },
+      '😏': { dt: [300,2000], rescale: [0,1], vs: { eyeContact: [0], browDownRight: [0.1], browInnerUp: [0.7], browOuterUpRight: [0.2], eyeLookInRight: [0.7], eyeLookOutLeft: [0.7], eyeSquintLeft: [1], eyeSquintRight: [0.8], eyesRotateY: [0.7], mouthLeft: [0.4], mouthPucker: [0.4], mouthShrugLower: [0.3], mouthShrugUpper: [0.2], mouthSmile: [0.2], mouthSmileLeft: [0.4], mouthSmileRight: [0.2], mouthStretchLeft: [0.5], mouthUpperUpLeft: [0.6], noseSneerLeft: [0.7] } },
+      '🙂': { dt: [300,2000], rescale: [0,1], vs: { mouthSmile: [0.5] } },
+      '🙃': { link:  '🙂' },
+      '😊': { dt: [300,2000], rescale: [0,1], vs: { browInnerUp: [0.6], eyeSquintLeft: [1], eyeSquintRight: [1], mouthSmile: [0.7], noseSneerLeft: [0.7], noseSneerRight: [0.7]} },
+      '😇': { link:  '😊' },
+      '😀': { dt: [300,2000], rescale: [0,1], vs: { browInnerUp: [0.6], jawOpen: [0.1], mouthDimpleLeft: [0.2], mouthDimpleRight: [0.2], mouthPressLeft: [0.3], mouthPressRight: [0.3], mouthRollLower: [0.4], mouthShrugUpper: [0.4], mouthSmile: [0.7], mouthUpperUpLeft: [0.3], mouthUpperUpRight: [0.3], noseSneerLeft: [0.4], noseSneerRight: [0.4] }},
+      '😃': { dt: [300,2000], rescale: [0,1], vs: { browInnerUp: [0.6], eyeWideLeft: [0.7], eyeWideRight: [0.7], jawOpen: [0.1], mouthDimpleLeft: [0.2], mouthDimpleRight: [0.2], mouthPressLeft: [0.3], mouthPressRight: [0.3], mouthRollLower: [0.4], mouthShrugUpper: [0.4], mouthSmile: [0.7], mouthUpperUpLeft: [0.3], mouthUpperUpRight: [0.3], noseSneerLeft: [0.4], noseSneerRight: [0.4] } },
+      '😄': { dt: [300,2000], rescale: [0,1], vs: { browInnerUp: [0.3], eyeSquintLeft: [1], eyeSquintRight: [1], jawOpen: [0.2], mouthDimpleLeft: [0.2], mouthDimpleRight: [0.2], mouthPressLeft: [0.3], mouthPressRight: [0.3], mouthRollLower: [0.4], mouthShrugUpper: [0.4], mouthSmile: [0.7], mouthUpperUpLeft: [0.3], mouthUpperUpRight: [0.3], noseSneerLeft: [0.4], noseSneerRight: [0.4] } },
+      '😁': { dt: [300,2000], rescale: [0,1], vs: { browInnerUp: [0.3], eyeSquintLeft: [1], eyeSquintRight: [1], jawOpen: [0.3], mouthDimpleLeft: [0.2], mouthDimpleRight: [0.2], mouthPressLeft: [0.5], mouthPressRight: [0.5], mouthShrugUpper: [0.4], mouthSmile: [0.7], mouthUpperUpLeft: [0.3], mouthUpperUpRight: [0.3], noseSneerLeft: [0.4], noseSneerRight: [0.4] } },
+      '😆': { dt: [300,2000], rescale: [0,1], vs: { browInnerUp: [0.3], eyeSquintLeft: [1], eyeSquintRight: [1], eyesClosed: [0.6], jawOpen: [0.3], mouthDimpleLeft: [0.2], mouthDimpleRight: [0.2], mouthPressLeft: [0.5], mouthPressRight: [0.5], mouthShrugUpper: [0.4], mouthSmile: [0.7], mouthUpperUpLeft: [0.3], mouthUpperUpRight: [0.3], noseSneerLeft: [0.4], noseSneerRight: [0.4] } },
+      '😝': { dt: [300,100,1500,500,500], rescale: [0,0,1,0,0], vs: { browInnerUp: [0.8], eyesClosed: [1], jawOpen: [0.7], mouthFunnel: [0.5], mouthSmile: [1], tongueOut: [0,1,1,0] } },
+      '😋': { link:  '😝' }, '😛': { link:  '😝' }, '😜': { link:  '😝' }, '🤪': { link:  '😝' },
+      '😂': { dt: [300,2000], rescale: [0,1], vs: { browInnerUp: [0.3], eyeSquintLeft: [1], eyeSquintRight: [1], eyesClosed: [0.6], jawOpen: [0.3], mouthDimpleLeft: [0.2], mouthDimpleRight: [0.2], mouthPressLeft: [0.5], mouthPressRight: [0.5], mouthShrugUpper: [0.4], mouthSmile: [0.7], mouthUpperUpLeft: [0.3], mouthUpperUpRight: [0.3], noseSneerLeft: [0.4], noseSneerRight: [0.4] } },
+      '🤣': { link:  '😂' }, '😅': { link:  '😂' },
+      '😉': { dt: [500,200,500,500], rescale: [0,0,0,1], vs: { mouthSmile: [0.5], mouthSmileLeft: [0,0.5,0], eyeBlinkLeft: [0,0.7,0], eyeBlinkRight: [0,0,0], bodyRotateX: [0.05,0.05,0.05,0], bodyRotateZ: [-0.05,-0.05,-0.05,0], browDownLeft: [0,0.7,0], cheekSquintLeft: [0,0.7,0], eyeSquintLeft: [0,1,0], eyesClosed: [0] } },
+
+      '😭': { dt: [1000,1000], rescale: [0,1], vs: { browInnerUp: [1], eyeSquintLeft: [1], eyeSquintRight: [1], eyesClosed: [0.1], jawOpen: [0], mouthFrownLeft: [1], mouthFrownRight: [1], mouthPucker: [0.5], mouthUpperUpLeft: [0.6], mouthUpperUpRight: [0.6] } },
+      '🥺': { dt: [1000,1000], rescale: [0,1], vs: { browDownLeft: [0.2], browDownRight: [0.2], browInnerUp: [1], eyeWideLeft: [0.9], eyeWideRight: [0.9], eyesClosed: [0.1], mouthClose: [0.2], mouthFrownLeft: [1], mouthFrownRight: [1], mouthPressLeft: [0.4], mouthPressRight: [0.4], mouthPucker: [1], mouthRollLower: [0.6], mouthRollUpper: [0.2], mouthUpperUpLeft: [0.8], mouthUpperUpRight: [0.8] } },
+      '😞': { dt: [1000,1000], rescale: [0,1], vs: { browInnerUp: [0.7], eyeSquintLeft: [1], eyeSquintRight: [1], eyesClosed: [0.5], bodyRotateX: [0.3], mouthClose: [0.2], mouthFrownLeft: [1], mouthFrownRight: [1], mouthPucker: [1], mouthRollLower: [1], mouthShrugLower: [0.2], mouthUpperUpLeft: [0.8], mouthUpperUpRight: [0.8] } },
+      '😔': { dt: [1000,1000], rescale: [0,1], vs: { browInnerUp: [1], eyeSquintLeft: [1], eyeSquintRight: [1], eyesClosed: [0.5], bodyRotateX: [0.3], mouthClose: [0.2], mouthFrownLeft: [1], mouthFrownRight: [1], mouthPressLeft: [0.4], mouthPressRight: [0.4], mouthPucker: [1], mouthRollLower: [0.6], mouthRollUpper: [0.2], mouthUpperUpLeft: [0.8], mouthUpperUpRight: [0.8] } },
+      '😳': { dt: [1000,1000], rescale: [0,1], vs: { browInnerUp: [1], eyeWideLeft: [0.5], eyeWideRight: [0.5], eyesRotateY: [0.05], eyesRotateX: [0.05], mouthClose: [0.2], mouthFunnel: [0.5], mouthPucker: [0.4], mouthRollLower: [0.4], mouthRollUpper: [0.4] } },
+      '☹️': { dt: [500,1500], rescale: [0,1], vs: { mouthFrownLeft: [1], mouthFrownRight: [1], mouthPucker: [0.1], mouthRollLower: [0.8] } },
+
+      '😚': { dt: [500,1000,1000], rescale: [0,1,0], vs: { browInnerUp: [0.6], eyeBlinkLeft: [1], eyeBlinkRight: [1], eyeSquintLeft: [1], eyeSquintRight: [1], mouthPucker: [0,0.5], noseSneerLeft: [0,0.7], noseSneerRight: [0,0.7], viseme_U: [0,1] } },
+      '😘': { dt: [500,500,200,500], rescale: [0,0,0,1], vs: { browInnerUp: [0.6], eyeBlinkLeft: [0,0,1,0], eyeBlinkRight: [0], eyesRotateY: [0], bodyRotateY: [0], bodyRotateX: [0,0.05,0.05,0], bodyRotateZ: [0,-0.05,-0.05,0], eyeSquintLeft: [1], eyeSquintRight: [1], mouthPucker: [0,0.5,0], noseSneerLeft: [0,0.7], noseSneerRight: [0.7], viseme_U: [0,1] } },
+      '🥰': { dt: [1000,1000], rescale: [0,1], vs: { browInnerUp: [0.6], eyeSquintLeft: [1], eyeSquintRight: [1], mouthSmile: [0.7], noseSneerLeft: [0.7], noseSneerRight: [0.7] } },
+      '😍': { dt: [1000,1000], rescale: [0,1], vs: { browInnerUp: [0.6], jawOpen: [0.1], mouthDimpleLeft: [0.2], mouthDimpleRight: [0.2], mouthPressLeft: [0.3], mouthPressRight: [0.3], mouthRollLower: [0.4], mouthShrugUpper: [0.4], mouthSmile: [0.7], mouthUpperUpLeft: [0.3], mouthUpperUpRight: [0.3], noseSneerLeft: [0.4], noseSneerRight: [0.4] } },
+      '🤩': { link:  '😍' },
+
+      '😡': { dt: [1000,1500], rescale: [0,1], vs: { browDownLeft: [1], browDownRight: [1], eyesLookUp: [0.2], jawForward: [0.3], mouthFrownLeft: [1], mouthFrownRight: [1], bodyRotateX: [0.15] } },
+      '😠': { dt: [1000,1500], rescale: [0,1], vs: { browDownLeft: [1], browDownRight: [1], eyesLookUp: [0.2], jawForward: [0.3], mouthFrownLeft: [1], mouthFrownRight: [1], bodyRotateX: [0.15] } },
+      '🤬': { link:  '😠' },
+      '😒': { dt: [1000,1000], rescale: [0,1], vs: { eyeContact: [0], browDownRight: [0.1], browInnerUp: [0.7], browOuterUpRight: [0.2], eyeLookInRight: [0.7], eyeLookOutLeft: [0.7], eyeSquintLeft: [1], eyeSquintRight: [0.8], eyesRotateY: [0.7], mouthFrownLeft: [1], mouthFrownRight: [1], mouthLeft: [0.2], mouthPucker: [0.5], mouthRollLower: [0.2], mouthRollUpper: [0.2], mouthShrugLower: [0.2], mouthShrugUpper: [0.2], mouthStretchLeft: [0.5] } },
+
+      '😱': { dt: [500,1500], rescale: [0,1], vs: { browInnerUp: [0.8], eyeWideLeft: [0.5], eyeWideRight: [0.5], jawOpen: [0.7], mouthFunnel: [0.5] } },
+      '😬': { dt: [500,1500], rescale: [0,1], vs: { browDownLeft: [1], browDownRight: [1], browInnerUp: [1], mouthDimpleLeft: [0.5], mouthDimpleRight: [0.5], mouthLowerDownLeft: [1], mouthLowerDownRight: [1], mouthPressLeft: [0.4], mouthPressRight: [0.4], mouthPucker: [0.5], mouthSmile: [0.1], mouthSmileLeft: [0.2], mouthSmileRight: [0.2], mouthStretchLeft: [1], mouthStretchRight: [1], mouthUpperUpLeft: [1], mouthUpperUpRight: [1] } },
+  };
+
   // Blendshape management
   let blendshapeMap = $state<Record<string, THREE.Mesh[]>>({});
 
@@ -156,6 +213,9 @@
   onMount(() => {
     initScene();
     loadModel();
+
+    // Debug: Log available emoji definitions
+    console.log("Available emoji animations:", Object.keys(EMOJI_BLENDSHAPES));
 
     // Start tracking mouse movement
     if (enableTracking) {
@@ -209,11 +269,29 @@
         "Audio start detected in Avatar. Three Clock:",
         threeClockAudioStartTime
       );
+      // Sort emoji events by start time when audio starts, just in case
+      emojiEvents.sort((a: EmojiEvent, b: EmojiEvent) => a.start_ms - b.start_ms);
     } else {
       threeClockAudioStartTime = null;
       resetVisemeBlendshapes(); // Reset lips when audio stops
+      resetEmojiBlendshapes(); // Reset emoji expressions when audio stops
     }
   });
+  
+  // Helper function to get emoji animation definition
+  function getEmojiAnimation(emoji: string): any {
+    const definition = EMOJI_BLENDSHAPES[emoji];
+    console.log("Get emoji animation for:", emoji)
+    if (definition) {
+      // If this emoji links to another emoji, follow the link
+      if (definition.link) {
+        return EMOJI_BLENDSHAPES[definition.link];
+      }
+      return definition;
+    }
+    return null;
+  }
+
   //------------------------------------------------------------------------------------------------
   //                                INITIALIZE SCENE
   //------------------------------------------------------------------------------------------------
@@ -259,8 +337,8 @@
       vertexShader: `
     varying vec2 vUv;
     void main() {
-      vUv = uv * 500.0;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1);
+      vUv = uv * 500.0; // Keep scaling here
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
   `,
       fragmentShader: `
@@ -268,8 +346,29 @@
     varying vec2 vUv;
 
     void main() {
-      float lines = step(0.98, abs(sin(vUv.x + uTime)) * abs(sin(vUv.y + uTime)));
-      vec3 color = mix(vec3(0.0), vec3(0.8, 0.9, 1.0), lines); // light neon blue
+      // Define line thickness relative to grid spacing
+      float thickness = 0.05; // Adjust for desired thickness
+
+      // Animate the grid position slightly
+      vec2 animatedUv = vUv + uTime * 0.5; 
+
+      // Calculate distance to the nearest grid line (horizontal and vertical)
+      vec2 gridPos = fract(animatedUv); // Position within the current grid cell (0 to 1)
+      vec2 distToLine = min(gridPos, 1.0 - gridPos); // Distance to closest edge (0 or 1)
+
+      // Check if within thickness threshold for either X or Y lines
+      // smoothstep creates anti-aliasing
+      float lineX = 1.0 - smoothstep(thickness, thickness + 0.02, distToLine.x);
+      float lineY = 1.0 - smoothstep(thickness, thickness + 0.02, distToLine.y);
+
+      // Combine lines - max means if either X or Y is a line, it's drawn
+      float gridIntensity = max(lineX, lineY);
+
+      // Mix color based on grid intensity
+      vec3 bgColor = vec3(0.0, 0.0, 0.1); // Dark blue background
+      vec3 lineColor = vec3(0.8, 0.9, 1.0); // Light neon blue
+      vec3 color = mix(bgColor, lineColor, gridIntensity); 
+      
       gl_FragColor = vec4(color, 1.0);
     }
   `,
@@ -278,7 +377,7 @@
 
     gridMesh = new THREE.Mesh(gridGeo, gridMat);
     gridMesh.rotation.x = -1;
-    gridMesh.position.y = -50;
+    gridMesh.position.y = -10;
     scene.add(gridMesh);
   }
 
@@ -324,6 +423,9 @@
         findBones();
 
         findAndMapMeshes();
+        
+        // Initialize all influences for visemes and emoji expressions
+        initializeAllInfluences();
 
         if (enableBlinking) startBlinking();
 
@@ -350,33 +452,10 @@
     skullBone = model.getObjectByName("skull") || null;
     neckBone = model.getObjectByName("neck") || null;
 
-    if (leftEyeBone) {
-      console.log("✅ Found left eye:", leftEyeBone.name);
-      leftEyeBone.userData.initialRotation = leftEyeBone.rotation.clone();
-    } else {
-      console.warn("❌ Left eye not found");
-    }
-
-    if (rightEyeBone) {
-      console.log("✅ Found right eye:", rightEyeBone.name);
-      rightEyeBone.userData.initialRotation = rightEyeBone.rotation.clone();
-    } else {
-      console.warn("❌ Right eye not found");
-    }
-
-    if (skullBone) {
-      console.log("✅ Found skull:", skullBone.name);
-      skullBone.userData.initialRotation = skullBone.rotation.clone();
-    } else {
-      console.warn("❌ Skull not found");
-    }
-
-    if (neckBone) {
-      console.log("✅ Found neck:", neckBone.name);
-      neckBone.userData.initialRotation = neckBone.rotation.clone();
-    } else {
-      console.warn("❌ Neck not found");
-    }
+    if (leftEyeBone) {leftEyeBone.userData.initialRotation = leftEyeBone.rotation.clone();} else {console.warn("❌ Left eye not found");}
+    if (rightEyeBone) {rightEyeBone.userData.initialRotation = rightEyeBone.rotation.clone();} else {console.warn("❌ Right eye not found");}
+    if (skullBone) {skullBone.userData.initialRotation = skullBone.rotation.clone();} else {console.warn("❌ Skull not found");}
+    if (neckBone) {neckBone.userData.initialRotation = neckBone.rotation.clone();} else {console.warn("❌ Neck not found");}
   }
 
   // -------------------------------- MAP BLENDSHAPES --------------------------------
@@ -385,22 +464,13 @@
 
   const meshesWithMorphs: THREE.Mesh[] = [];
   model.traverse((node) => {
-    // Find skinned meshes with morph targets (common for RPM avatars)
-    if (
-      node.isSkinnedMesh && // Often SkinnedMesh for RPM heads/faces
-      node.morphTargetInfluences &&
-      node.morphTargetInfluences.length > 0 &&
-      node.morphTargetDictionary
-    ) {
-      meshesWithMorphs.push(node as THREE.Mesh);
-    } else if ( // Fallback for non-skinned meshes
-      node.isMesh &&
-      !node.isSkinnedMesh &&
-      node.morphTargetInfluences &&
-      node.morphTargetInfluences.length > 0 &&
-      node.morphTargetDictionary
-    ) {
-       meshesWithMorphs.push(node as THREE.Mesh);
+    // Check if it's a SkinnedMesh with morph targets
+    if (node instanceof THREE.SkinnedMesh && node.morphTargetInfluences && node.morphTargetDictionary) {
+      meshesWithMorphs.push(node);
+    } 
+    // Else, check if it's a regular Mesh with morph targets
+    else if (node instanceof THREE.Mesh && !(node instanceof THREE.SkinnedMesh) && node.morphTargetInfluences && node.morphTargetDictionary) {
+      meshesWithMorphs.push(node);
     }
   });
 
@@ -416,7 +486,8 @@
   blendshapeMap = {}; // Clear previous map
   Object.values(BLENDSHAPES).forEach(arkitName => {
      // Check if this ARKit name exists on the first found mesh's dictionary
-     if (faceMeshes[0].morphTargetDictionary?.[arkitName] !== undefined) {
+     // Use optional chaining just in case faceMeshes[0] or morphTargetDictionary is somehow undefined
+     if (faceMeshes[0]?.morphTargetDictionary?.[arkitName] !== undefined) { 
          blendshapeMap[arkitName] = faceMeshes; // Assign relevant meshes
      }
   });
@@ -429,6 +500,15 @@
   faceMeshes.forEach((mesh) => {
     // Check if this mesh has the morph target dictionary
     const morphDict = mesh.morphTargetDictionary as Record<string, number>;
+
+
+    // --- DEBUG LOG FOR EMOJIS ---
+    // if (!name.startsWith('viseme_') && value > 0.01 && disableIdleBlendshapes) { // Log only active non-viseme shapes
+    //      const found = morphDict && name in morphDict;
+    //      console.log(`Applying Emoji/Other Shape: ${name} = ${value.toFixed(2)}. Found in dict: ${found}`);
+    //      if(morphDict && !found) console.log(`Available keys: ${Object.keys(morphDict).join(', ')}`); // Log keys if not found
+    // }
+    // --- END DEBUG ---
 
     if (morphDict && name in morphDict) {
       const index = morphDict[name];
@@ -454,12 +534,39 @@
       setBlendshapeValue(name, 0);
     });
     resetVisemeBlendshapes();
+    resetEmojiBlendshapes();
   }
 
   function resetVisemeBlendshapes(): void {
     OCULUS_VISEME_NAMES.forEach((name) => {
       setBlendshapeValue(name, 0);
     });
+  }
+  
+  // Function to reset emoji state
+  function resetEmojiBlendshapes(): void {
+    currentActiveEmoji = null; // Reset the currently active emoji event
+    currentEmojiDefinition = null;
+    disableIdleBlendshapes = false; // Re-enable idle movements
+    // Reset influences (assuming ARKit names are in BLENDSHAPES)
+    // Iterate through all known blendshapes (visemes + potential emoji shapes)
+    const allShapeNames = new Set([...OCULUS_VISEME_NAMES, ...Object.values(BLENDSHAPES)]);
+    allShapeNames.forEach(name => {
+       if (typeof name === 'string' && !name.startsWith('viseme_')) { // Only reset non-viseme shapes here
+          currentEmojiInfluences[name] = 0;
+          // Optionally call setBlendshapeValue here too if immediate reset needed
+          setBlendshapeValue(name, 0);
+       }
+    });
+  }
+
+  // Initialize all influences
+  function initializeAllInfluences(): void {
+    OCULUS_VISEME_NAMES.forEach(name => { 
+      currentVisemeInfluences[name] = 0; 
+    });
+    resetEmojiBlendshapes(); // Use this to initialize emoji influences too
+    console.log("Initialized all influences");
   }
 
   // -------------------------------- RESET BONES --------------------------------
@@ -616,6 +723,7 @@
 
   // -------------------------------- EYE BLENDSHAPES --------------------------------
   function updateEyeBlendshapes(lookX: number, lookY: number): void {
+    if (disableIdleBlendshapes) return;
     // Reset existing eye shape blendshapes
     setBlendshapeValue(BLENDSHAPES.EYE_SQUINT_LEFT, 0);
     setBlendshapeValue(BLENDSHAPES.EYE_SQUINT_RIGHT, 0);
@@ -642,6 +750,7 @@
   //                                BLINKING AND GLANCE FUNCTIONS
   // ------------------------------------------------------------------------------------------------
   function startBlinking(): void {
+    if (disableIdleBlendshapes) return;
     const randomBlinkInterval = (): number => 1000 + Math.random() * 8000;
 
     const doBlink = async (): Promise<void> => {
@@ -734,50 +843,129 @@
       updateEyeBlendshapes((glanceLookX - 0.5) * 2, (0.5 - glanceLookY) * 2);
     }
 
-    // --- LIP SYNC LOGIC ---
-    const targetBlendValues: { [key: string]: number } = {}; // Store TARGET values (0 or 1) for this frame
+    // --- LIP SYNC & EMOJI ANIMATION LOGIC ---
+    let elapsedAudioTimeMs = -1;
+    if (threeClockAudioStartTime !== null) {
+      elapsedAudioTimeMs = (time - threeClockAudioStartTime) * 1000;
+    }
 
-    if (threeClockAudioStartTime !== null && visemeTimeline.length > 0) {
-        const elapsedAudioTimeMs = (time - threeClockAudioStartTime) * 1000;
+    // --- 1. Determine Target Viseme Values ---
+    const targetVisemeValues: { [key: string]: number } = {};
+    if (elapsedAudioTimeMs >= 0 && visemeTimeline.length > 0) {
+      for (const event of visemeTimeline) {
+        if (elapsedAudioTimeMs >= event.start && elapsedAudioTimeMs <= event.end) {
+          const morphTargetName = 'viseme_' + event.viseme;
+          targetVisemeValues[morphTargetName] = 1.0;
+        }
+      }
+    }
 
-        // Determine TARGET value (1.0) for active viseme(s)
-        for (const event of visemeTimeline) {
-            if (elapsedAudioTimeMs >= event.start && elapsedAudioTimeMs <= event.end) {
-                const morphTargetName = 'viseme_' + event.viseme;
-                targetBlendValues[morphTargetName] = 1.0; // Target is 1 when active
-                // Optimization: if only one viseme active at a time, could break
+    // --- 2. Determine Target Emoji Values ---
+    const targetEmojiValues: { [key: string]: number } = {};
+
+    // Find the latest emoji that should be active based on start time
+    let latestEmojiEvent: EmojiEvent | null = null;
+    if (elapsedAudioTimeMs >= 0 && emojiEvents.length > 0) {
+        for (let i = emojiEvents.length - 1; i >= 0; i--) {
+            if (elapsedAudioTimeMs >= emojiEvents[i].start_ms) {
+                latestEmojiEvent = emojiEvents[i];
+                break;
             }
         }
     }
-    // --- Interpolate and Apply ---
-    let activeVisemeFoundThisFrame = false; // Track if *any* viseme should be active
-
-    OCULUS_VISEME_NAMES.forEach(name => {
-        const targetValue = targetBlendValues[name] || 0; // Target is 1 if active, 0 otherwise
-        let currentValue = currentVisemeInfluences[name] || 0; // Get current smoothed value
-
-        // Interpolate currentValue towards targetValue
-        // Using frame-rate independent smoothing:
-        const lerpFactor = 1.0 - Math.exp(-lipSmoothingSpeed * delta);
-        const newValue = currentValue + (targetValue - currentValue) * lerpFactor;
-
-        // Clamp tiny values to 0 to prevent lingering influences
-        const finalValue = (newValue < 0.001) ? 0 : THREE.MathUtils.clamp(newValue, 0, 1);
-
-        // Apply the smoothed value
-        setBlendshapeValue(name, finalValue);
-
-        // Update the stored current value for the next frame
-        currentVisemeInfluences[name] = finalValue;
-
-        if(finalValue > 0.01) { // Check if this viseme has any significant influence
-            activeVisemeFoundThisFrame = true;
+    
+    // Check if the active emoji needs to change
+    if (latestEmojiEvent && latestEmojiEvent.emoji !== currentActiveEmoji?.emoji) {
+        console.log(`Switching emoji: ${currentActiveEmoji?.emoji || 'none'} -> ${latestEmojiEvent.emoji} at ${elapsedAudioTimeMs.toFixed(0)}ms`);
+        currentActiveEmoji = latestEmojiEvent;
+        currentEmojiDefinition = getEmojiAnimation(currentActiveEmoji.emoji);
+        
+        if (currentEmojiDefinition && currentEmojiDefinition.vs) {
+             disableIdleBlendshapes = true; // Disable idle movements when an emoji is active
+             console.log(`   Definition found for ${currentActiveEmoji.emoji}`);
+        } else {
+             disableIdleBlendshapes = false; // Re-enable if no definition found
+             console.log(`   No valid animation definition found for ${currentActiveEmoji.emoji}`);
+             currentEmojiDefinition = null; // Clear definition if invalid
         }
+
+    } else if (!latestEmojiEvent && currentActiveEmoji) {
+        // This case should ideally not happen if audio is still playing and events exist,
+        // but handles resetting if somehow no event is found mid-playback.
+        // Resetting primarily happens via the $effect hook when audio stops.
+        // console.log(`Clearing active emoji ${currentActiveEmoji.emoji} as no event found at ${elapsedAudioTimeMs.toFixed(0)}ms`);
+        // currentActiveEmoji = null;
+        // currentEmojiDefinition = null;
+        // disableIdleBlendshapes = false;
+    }
+
+    // If an emoji is active, set its target blend values
+    if (currentActiveEmoji && currentEmojiDefinition && currentEmojiDefinition.vs) {
+        const values = currentEmojiDefinition.vs;
+        for (const blendshapeName in values) {
+            const valueSequence = values[blendshapeName];
+            let targetValue = 0;
+
+            // Determine the target value: use number directly, or first element of array
+            if (typeof valueSequence === 'number') {
+                targetValue = valueSequence;
+            } else if (Array.isArray(valueSequence) && valueSequence.length > 0 && typeof valueSequence[0] === 'number') {
+                // Use the first value in the sequence as the target hold value
+                // We could adapt this later to use `dt` if needed, but for now, hold the initial pose.
+                targetValue = valueSequence[0]; 
+            }
+
+            targetEmojiValues[blendshapeName] = targetValue;
+        }
+    }
+
+    // --- 3. Smooth & Combine Viseme and Emoji Influences ---
+    const finalBlendValues: { [key: string]: number } = {};
+
+    // Smooth Visemes
+    OCULUS_VISEME_NAMES.forEach(name => {
+      const targetValue = targetVisemeValues[name] || 0;
+      let currentValue = currentVisemeInfluences[name] || 0;
+      const lerpFactor = 1.0 - Math.exp(-lipSmoothingSpeed * delta);
+      const newValue = currentValue + (targetValue - currentValue) * lerpFactor;
+      const finalValue = (newValue < 0.001) ? 0 : THREE.MathUtils.clamp(newValue, 0, 1);
+      currentVisemeInfluences[name] = finalValue;
+      finalBlendValues[name] = finalValue; // Start with viseme value
     });
-    // --- END LIP SYNC LOGIC ---
+
+    // Identify all possible emoji blendshape names from definitions and current influences
+    const allEmojiShapeNames = new Set([
+        ...Object.values(BLENDSHAPES), // Base shapes
+        ...Object.keys(currentEmojiInfluences) // Currently smoothed shapes
+    ]);
+    if (currentEmojiDefinition && currentEmojiDefinition.vs) {
+        Object.keys(currentEmojiDefinition.vs).forEach(name => allEmojiShapeNames.add(name)); // Shapes from current definition
+    }
+
+    // Smooth Emojis
+    allEmojiShapeNames.forEach(name => {
+      if (typeof name === 'string' && !name.startsWith('viseme_')) { // Don't smooth visemes here
+        const targetValue = targetEmojiValues[name] || 0; // Target from emoji logic (or 0 if emoji ended)
+        let currentValue = currentEmojiInfluences[name] || 0;
+        const lerpFactor = 1.0 - Math.exp(-emojiSmoothingSpeed * delta);
+        const newValue = currentValue + (targetValue - currentValue) * lerpFactor;
+        const finalValue = (newValue < 0.001) ? 0 : THREE.MathUtils.clamp(newValue, 0, 1);
+        currentEmojiInfluences[name] = finalValue;
+
+        // Combine with viseme value (take maximum) - only for shapes NOT controlled by visemes
+        if (!OCULUS_VISEME_NAMES.includes(name)) {
+            finalBlendValues[name] = Math.max(finalBlendValues[name] || 0, finalValue);
+        }
+      }
+    });
+
+    // --- 4. Apply Final Values ---
+    // Apply all calculated values (visemes + emojis combined)
+    for (const shapeName in finalBlendValues) {
+      setBlendshapeValue(shapeName, finalBlendValues[shapeName]);
+    }
 
     gridMat.uniforms.uTime.value = clock.elapsedTime * 5.0;
-    gridMesh.rotation.z += 0.001;
     renderer.render(scene, camera);
   }
 

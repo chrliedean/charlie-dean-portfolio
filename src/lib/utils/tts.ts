@@ -1,4 +1,17 @@
 // tts.ts
+
+// Define the interfaces for our data structures
+interface WordTiming {
+  word: string;
+  start_ms: number;
+  duration_ms: number;
+}
+
+interface EmojiEvent {
+  emoji: string;
+  start_ms: number;
+}
+
 export async function* generateSpeech(text: string) {
     console.log("generating speech for", text);
     const res = await fetch('/api/tts', {
@@ -28,7 +41,7 @@ export async function* generateSpeech(text: string) {
           const pcmBuffer = rawBytes.buffer; // ArrayBuffer with 16-bit LE PCM
   
           // --- Word Timing Derivation ---
-          const wordTimings: { word: string; start_ms: number; duration_ms: number }[] = [];
+          const wordTimings: WordTiming[] = [];
           // Use the alignment data provided by the user
           const alignment = msg.normalized_alignment;
           const nonNormalizedAlignment = msg.alignment;
@@ -75,18 +88,57 @@ export async function* generateSpeech(text: string) {
               }
             }
           }
-  
-          // --- Yield PCM and derived Word Timings ---
+          
+          // --- Emoji Timing Derivation ---
+          const emojiEvents: EmojiEvent[] = [];
+          const emojiRegex = /[\p{Extended_Pictographic}]/u; // Regex to find emojis
+          
+          if (nonNormalizedAlignment && nonNormalizedAlignment.characters && 
+              nonNormalizedAlignment.character_start_times_seconds && 
+              nonNormalizedAlignment.character_end_times_seconds) {
+                
+            // First pass: identify all emoji positions and timestamps
+            const emojiPositions: {index: number, char: string, startTimeSec: number}[] = [];
+            
+            for (let i = 0; i < nonNormalizedAlignment.characters.length; i++) {
+              const char = nonNormalizedAlignment.characters[i];
+              if (emojiRegex.test(char)) {
+                const startTimeSec = nonNormalizedAlignment.character_start_times_seconds[i];
+                if (startTimeSec !== undefined) {
+                  emojiPositions.push({
+                    index: i,
+                    char: char,
+                    startTimeSec: startTimeSec
+                  });
+                }
+              }
+            }
+            
+            // Second pass: create emoji events with only start times
+            for (let i = 0; i < emojiPositions.length; i++) {
+              const emoji = emojiPositions[i];
+              // Create the emoji event with just the start time
+              emojiEvents.push({
+                emoji: emoji.char,
+                start_ms: Math.round(emoji.startTimeSec * 1000),
+              });
+              
+              console.log(`TTS: Found emoji ${emoji.char} starting at ${emoji.startTimeSec}s`);
+            }
+          }
+          // --- Yield PCM and timings ---
           if (pcmBuffer && pcmBuffer.byteLength > 0) {
             yield {
               pcmBuffer: pcmBuffer,
-              wordTimings: wordTimings
+              wordTimings: wordTimings,
+              emojiEvents: emojiEvents
             };
-          } else if (wordTimings.length > 0) {
+          } else if (wordTimings.length > 0 || emojiEvents.length > 0) {
              // Yield timings even if there's no audio in this specific message
              yield {
               pcmBuffer: null,
-              wordTimings: wordTimings
+              wordTimings: wordTimings,
+              emojiEvents: emojiEvents
             };
           }
         } catch (e) {
