@@ -57,11 +57,10 @@
         >
       </li>
       <li>
-        <a href="https://rapport.cloud" target="_blank">Rapport</a> - powers
+        <a href="https://elevenlabs.io" target="_blank">ElevenLabs</a> - powers
         E-Charlie along with
-        <a href="https://elevenlabs.io" target="_blank">ElevenLabs</a>
-        and a certain
-        <a href="https://openai.com" target="_blank">large language model</a>.
+        <a href="https://threejs.org/" target="_blank">Three.js</a>, parts of <a href="https://github.com/met4citizen/TalkingHead">TalkingHead</a>
+        for lipsyncing, and <a href="https://www.copresence.tech/" target="_blank">Copresence</a> for the initial scan of my head.
       </li>
       <li>
         <a href="https://github.com/EHowardHill" target="_blank">Ethan Hill</a>
