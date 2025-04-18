@@ -3,16 +3,20 @@
   import * as THREE from "three";
   import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
   import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+  import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
   import { SimplexNoise } from "three/examples/jsm/math/SimplexNoise.js";
-  import { analyzeVisemesFromFrequencyData } from "$lib/utils/visemes";
+  import type { VisemeEvent } from "$lib/utils/visemes";
 
-  // Component props
-  const modelPath: string = "/charlie.glb";
+  const modelPath: string = "/charlie-v2.glb";
   const enableTracking: boolean = true;
   const enableBlinking: boolean = true;
   const enableIdleMovements: boolean = true;
 
-  let { frequencyData } = $props<{ frequencyData: Uint8Array | null }>();
+  let { visemeTimeline = [], audioPlaybackStartTime = null } = $props<{
+    visemeTimeline: VisemeEvent[];
+    audioPlaybackStartTime: number | null;
+  }>();
+
   // Noise for idle jitter
   const noise = new SimplexNoise();
 
@@ -33,6 +37,8 @@
 
   // Animation state
   const clock = new THREE.Clock();
+  let threeClockAudioStartTime: number | null = null;
+
   let model = $state<THREE.Group | null>(null);
   let isLoading = $state(true);
   let loadingProgress = $state(0);
@@ -46,6 +52,8 @@
   let skullBone = $state<THREE.Object3D | null>(null);
   let neckBone = $state<THREE.Object3D | null>(null);
 
+  let faceMeshes = $state<THREE.Mesh[]>([]);
+
   // Animation control
   let blinkTimer: number | null = null;
   let idleTimer: number | null = null;
@@ -55,6 +63,9 @@
   let mousePosition = $state({ x: 0.5, y: 0.5 });
   let targetLook = { x: 0.5, y: 0.5 };
   let currentLook = { x: 0.5, y: 0.5 };
+
+  const lipSmoothingSpeed = 15;
+  let currentVisemeInfluences = $state<Record<string, number>>({});
 
   // Grid background
 
@@ -123,6 +134,24 @@
   // Blendshape management
   let blendshapeMap = $state<Record<string, THREE.Mesh[]>>({});
 
+  const OCULUS_VISEME_NAMES = [
+    "viseme_sil",
+    "viseme_PP",
+    "viseme_FF",
+    "viseme_TH",
+    "viseme_DD",
+    "viseme_kk",
+    "viseme_CH",
+    "viseme_SS",
+    "viseme_nn",
+    "viseme_RR",
+    "viseme_aa",
+    "viseme_E",
+    "viseme_I",
+    "viseme_O",
+    "viseme_U",
+  ];
+
   // On mount.
   onMount(() => {
     initScene();
@@ -173,17 +202,18 @@
   //------------------------------------------------------------------------------------------------
   //                                LIP SYNC FUNCTIONS
   //------------------------------------------------------------------------------------------------
-
-function processLipSync(): void {
-  if (!frequencyData || !frequencyData.length) return;
-
-  const { kiss, lipsClosed, jaw } = analyzeVisemesFromFrequencyData(frequencyData);
-
-  setBlendshapeValue(BLENDSHAPES.JAW_OPEN, Math.max(0, jaw));
-  setBlendshapeValue(BLENDSHAPES.MOUTH_PUCKER, Math.max(0, kiss));
-  //setBlendshapeValue(BLENDSHAPES.MOUTH_CLOSE, Math.max(0, lipsClosed));
-}
-
+  $effect(() => {
+    if (audioPlaybackStartTime !== null) {
+      threeClockAudioStartTime = clock.getElapsedTime();
+      console.log(
+        "Audio start detected in Avatar. Three Clock:",
+        threeClockAudioStartTime
+      );
+    } else {
+      threeClockAudioStartTime = null;
+      resetVisemeBlendshapes(); // Reset lips when audio stops
+    }
+  });
   //------------------------------------------------------------------------------------------------
   //                                INITIALIZE SCENE
   //------------------------------------------------------------------------------------------------
@@ -254,14 +284,29 @@ function processLipSync(): void {
 
   // -------------------------------- LOAD MODEL --------------------------------
   function loadModel(): void {
-    const loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader(); //
 
+    // 2. Set the path to the Draco decoder files you copied to your static/public folder
+    //    Adjust '/draco-decoder-jsm/' to the actual path you used.
+    //    Common paths: '/draco/', '/decoder/draco/', '/libs/draco/'
+    dracoLoader.setDecoderPath(
+      "https://www.gstatic.com/draco/versioned/decoders/1.5.7/"
+    ); // IMPORTANT: Path relative to web server root!
+    dracoLoader.setDecoderConfig({ type: "js" }); // Optional: force JS decoder if WASM causes issues
+
+    // 3. Instantiate GLTFLoader
+    const loader = new GLTFLoader(); //
+
+    // 4. Associate DRACOLoader with GLTFLoader
+    loader.setDRACOLoader(dracoLoader); //
+
+    // 5. Load the GLB file
     loader.load(
-      modelPath,
+      //
+      modelPath, // Your '/charlie.glb' path
       (gltf) => {
         model = gltf.scene;
 
-        // Center and scale the model
         const box = new THREE.Box3().setFromObject(gltf.scene);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
@@ -276,17 +321,14 @@ function processLipSync(): void {
 
         scene.add(gltf.scene);
 
-        // Find bones
         findBones();
 
-        // Map all blendshapes
-        mapBlendshapes();
+        findAndMapMeshes();
 
-        // Start animations
         if (enableBlinking) startBlinking();
 
         isLoading = false;
-        console.log("Model loaded successfully");
+        console.log("Model loaded successfully (with DRACO support)");
       },
       (xhr) => {
         loadingProgress = Math.floor((xhr.loaded / xhr.total) * 100);
@@ -338,58 +380,84 @@ function processLipSync(): void {
   }
 
   // -------------------------------- MAP BLENDSHAPES --------------------------------
-  function mapBlendshapes(): void {
-    if (!model) return;
+  function findAndMapMeshes(): void {
+  if (!model) return;
 
-    // Since we know we're using standard ARKit blendshapes,
-    // we can just find all meshes with morph targets
-    const faceMeshes: THREE.Mesh[] = [];
+  const meshesWithMorphs: THREE.Mesh[] = [];
+  model.traverse((node) => {
+    // Find skinned meshes with morph targets (common for RPM avatars)
+    if (
+      node.isSkinnedMesh && // Often SkinnedMesh for RPM heads/faces
+      node.morphTargetInfluences &&
+      node.morphTargetInfluences.length > 0 &&
+      node.morphTargetDictionary
+    ) {
+      meshesWithMorphs.push(node as THREE.Mesh);
+    } else if ( // Fallback for non-skinned meshes
+      node.isMesh &&
+      !node.isSkinnedMesh &&
+      node.morphTargetInfluences &&
+      node.morphTargetInfluences.length > 0 &&
+      node.morphTargetDictionary
+    ) {
+       meshesWithMorphs.push(node as THREE.Mesh);
+    }
+  });
 
-    model.traverse((node) => {
-      if (
-        node.isMesh &&
-        node.morphTargetInfluences &&
-        node.morphTargetInfluences.length > 0
-      ) {
-        faceMeshes.push(node as THREE.Mesh);
-      }
-    });
-
-    // Store these meshes for later use
-    blendshapeMap = Object.values(BLENDSHAPES).reduce(
-      (map, name) => {
-        map[name] = faceMeshes;
-        return map;
-      },
-      {} as Record<string, THREE.Mesh[]>
-    );
-
-    console.log("Using standard ARKit blendshapes");
+  if (meshesWithMorphs.length === 0) {
+      console.warn("❌ No meshes with morph targets found!");
+      return;
   }
+  // Store the found meshes directly
+  faceMeshes = meshesWithMorphs;
+  console.log(`✅ Found ${faceMeshes.length} mesh(es) with morph targets.`);
+
+  // OPTIONAL: You can still populate blendshapeMap for non-viseme shapes if needed
+  blendshapeMap = {}; // Clear previous map
+  Object.values(BLENDSHAPES).forEach(arkitName => {
+     // Check if this ARKit name exists on the first found mesh's dictionary
+     if (faceMeshes[0].morphTargetDictionary?.[arkitName] !== undefined) {
+         blendshapeMap[arkitName] = faceMeshes; // Assign relevant meshes
+     }
+  });
+   console.log("Mapped non-viseme blendshapes:", Object.keys(blendshapeMap));
+}
 
   // -------------------------------- SET BLENDSHAPE VALUE --------------------------------
   function setBlendshapeValue(name: string, value: number): void {
-    const meshes = blendshapeMap[name];
+  // Iterate through the stored face meshes directly
+  faceMeshes.forEach((mesh) => {
+    // Check if this mesh has the morph target dictionary
+    const morphDict = mesh.morphTargetDictionary as Record<string, number>;
 
-    if (meshes) {
-      meshes.forEach((mesh) => {
-        const morphDict = (mesh as any).morphTargetDictionary as Record<
-          string,
-          number
-        >;
-        if (morphDict && name in morphDict) {
-          const index = morphDict[name];
-          if (mesh.morphTargetInfluences) {
-            mesh.morphTargetInfluences[index] = value;
-          }
-        }
-      });
+    if (morphDict && name in morphDict) {
+      const index = morphDict[name];
+      if (mesh.morphTargetInfluences && index !== undefined && index < mesh.morphTargetInfluences.length) {
+         // Basic check to prevent NaN/Infinity affecting influences
+         if (isFinite(value)) {
+             mesh.morphTargetInfluences[index] = THREE.MathUtils.clamp(value, 0, 1); // Clamp value just in case
+         } else {
+             console.warn(`Attempted to set invalid value (${value}) for blendshape: ${name}`);
+         }
+      }
     }
-  }
+    // Optional: Add a log if a specific viseme name ISN'T found, helps debug model export
+    // else if (name.startsWith('viseme_')) {
+    //    console.warn(`Viseme shape key "${name}" not found in morphTargetDictionary for mesh ${mesh.name}`);
+    // }
+  });
+}
 
   // -------------------------------- RESET ALL BLENDSHAPES --------------------------------
   function resetAllBlendshapes(): void {
     Object.keys(blendshapeMap).forEach((name) => {
+      setBlendshapeValue(name, 0);
+    });
+    resetVisemeBlendshapes();
+  }
+
+  function resetVisemeBlendshapes(): void {
+    OCULUS_VISEME_NAMES.forEach((name) => {
       setBlendshapeValue(name, 0);
     });
   }
@@ -659,16 +727,54 @@ function processLipSync(): void {
     const glanceLookX = jitteredLookX + glanceOffset.x;
     const glanceLookY = jitteredLookY + glanceOffset.y;
 
-    if (frequencyData) {
-      processLipSync();
-    }
-
     if (trackingActive && enableTracking) {
       // Head + neck follows smoothed target
       rotateEyeBones((glanceLookX - 0.5) * 2, (0.5 - glanceLookY) * 2);
       rotateHeadAndNeck((jitteredLookX - 0.5) * 2, (0.5 - jitteredLookY) * 2);
       updateEyeBlendshapes((glanceLookX - 0.5) * 2, (0.5 - glanceLookY) * 2);
     }
+
+    // --- LIP SYNC LOGIC ---
+    const targetBlendValues: { [key: string]: number } = {}; // Store TARGET values (0 or 1) for this frame
+
+    if (threeClockAudioStartTime !== null && visemeTimeline.length > 0) {
+        const elapsedAudioTimeMs = (time - threeClockAudioStartTime) * 1000;
+
+        // Determine TARGET value (1.0) for active viseme(s)
+        for (const event of visemeTimeline) {
+            if (elapsedAudioTimeMs >= event.start && elapsedAudioTimeMs <= event.end) {
+                const morphTargetName = 'viseme_' + event.viseme;
+                targetBlendValues[morphTargetName] = 1.0; // Target is 1 when active
+                // Optimization: if only one viseme active at a time, could break
+            }
+        }
+    }
+    // --- Interpolate and Apply ---
+    let activeVisemeFoundThisFrame = false; // Track if *any* viseme should be active
+
+    OCULUS_VISEME_NAMES.forEach(name => {
+        const targetValue = targetBlendValues[name] || 0; // Target is 1 if active, 0 otherwise
+        let currentValue = currentVisemeInfluences[name] || 0; // Get current smoothed value
+
+        // Interpolate currentValue towards targetValue
+        // Using frame-rate independent smoothing:
+        const lerpFactor = 1.0 - Math.exp(-lipSmoothingSpeed * delta);
+        const newValue = currentValue + (targetValue - currentValue) * lerpFactor;
+
+        // Clamp tiny values to 0 to prevent lingering influences
+        const finalValue = (newValue < 0.001) ? 0 : THREE.MathUtils.clamp(newValue, 0, 1);
+
+        // Apply the smoothed value
+        setBlendshapeValue(name, finalValue);
+
+        // Update the stored current value for the next frame
+        currentVisemeInfluences[name] = finalValue;
+
+        if(finalValue > 0.01) { // Check if this viseme has any significant influence
+            activeVisemeFoundThisFrame = true;
+        }
+    });
+    // --- END LIP SYNC LOGIC ---
 
     gridMat.uniforms.uTime.value = clock.elapsedTime * 5.0;
     gridMesh.rotation.z += 0.001;

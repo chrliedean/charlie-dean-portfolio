@@ -1,58 +1,81 @@
-// Live speech-driven lip-sync algorithm ported from Llorach et al. (2016)
+// src/lib/utils/viseme-helper.ts (Updated)
+import { LipsyncEn } from '$lib/utils/lipsync-en.mjs'; // Adjust path
 
-const fBins = [0, 500, 700, 3000, 6000];
-// Energy threshold constant
-const threshold = 0.5;
-// Sampling frequency for FFT (Hz)
-const samplingFrequency = 44100;
+// Instantiate the English lip-sync processor
+const lipsyncProcessor = new LipsyncEn();
 
-// Utility to clamp values between 0 and 1
-function clamp(value: number, min = 0, max = 1): number {
-  return Math.min(max, Math.max(min, value));
+// Input/output interfaces
+export interface WordTiming {
+  word: string;
+  start_ms: number;
+  duration_ms: number;
+}
+
+export interface VisemeEvent {
+  viseme: string;
+  start: number;
+  end: number;
+}
+
+// Interface for the object returned by wordsToVisemes
+interface LipsyncResult {
+  words: string;
+  visemes: string[];
+  times: number[];
+  durations: number[];
+  i?: number;
 }
 
 /**
- * Analyze frequency-domain data to compute lip-sync blendshape weights.
- * @param spectrum - Float32Array of frequency bin magnitudes in dB (e.g., from AnalyserNode.getFloatFrequencyData)
- * @returns Object with kiss, lipsClosed, and jaw values in [0,1].
+ * Generates an absolute viseme timeline from word timings.
  */
-export function analyzeVisemesFromFrequencyData(
-  spectrum: Float32Array
-): { kiss: number; lipsClosed: number; jaw: number } {
-  const binCount = spectrum.length;
-  const energy: number[] = [];
+export function generateVisemeTimeline(wordTimings: WordTiming[]): VisemeEvent[] {
+  const visemeTimeline: VisemeEvent[] = [];
+  if (!wordTimings || wordTimings.length === 0) {
+    return visemeTimeline;
+  }
 
-  // Compute average energy in each defined frequency band
-  for (let i = 0; i < fBins.length - 1; i++) {
-    const startFreq = fBins[i];
-    const endFreq = fBins[i + 1];
-    const startIndex = Math.round((startFreq / (samplingFrequency / 2)) * binCount);
-    const endIndex = Math.round((endFreq / (samplingFrequency / 2)) * binCount);
+  wordTimings.forEach(wordInfo => {
+    if (!wordInfo.word || wordInfo.duration_ms <= 0) return;
 
-    let sum = 0;
-    for (let j = startIndex; j < endIndex; j++) {
-      // Map dB spectrum value to energy with threshold
-      let value = threshold + (spectrum[j] + 20) / 140;
-      if (value < 0) value = 0;
-      sum += value;
+    const processedWord = lipsyncProcessor.preProcessText(wordInfo.word);
+    if (!processedWord) return;
+
+    // Explicitly type the result here!
+    const relativeVisemes: LipsyncResult = lipsyncProcessor.wordsToVisemes(processedWord) as LipsyncResult; //
+
+    // Now TypeScript knows about these properties, and the errors should disappear
+    if (!relativeVisemes || !relativeVisemes.visemes || relativeVisemes.visemes.length === 0) {
+      return;
     }
-    energy[i] = sum / (endIndex - startIndex);
-  }
 
-  // Kiss blendshape: influenced by mid-frequency band
-  let kiss = (0.5 - energy[2]) * 2;
-  if (energy[1] < 0.2) {
-    kiss *= energy[1] * 5;
-  }
-  kiss = clamp(kiss);
+    const lastVisemeIndex = relativeVisemes.visemes.length - 1;
+    const totalRelativeDuration = relativeVisemes.times[lastVisemeIndex] + relativeVisemes.durations[lastVisemeIndex];
 
-  // Lips closed blendshape: high-frequency energy
-  let lipsClosed = energy[3] * 3;
-  lipsClosed = clamp(lipsClosed);
+    if (totalRelativeDuration <= 0) return;
 
-  // Jaw blendshape: difference between second and fourth band
-  let jaw = energy[1] * 0.8 - energy[3] * 0.8;
-  jaw = clamp(jaw);
+    for (let i = 0; i < relativeVisemes.visemes.length; i++) {
+      const viseme = relativeVisemes.visemes[i];
+      const relativeStartTime = relativeVisemes.times[i];
+      const relativeDuration = relativeVisemes.durations[i];
 
-  return { kiss, lipsClosed, jaw };
+      const absoluteStart = wordInfo.start_ms + (relativeStartTime / totalRelativeDuration) * wordInfo.duration_ms;
+      const absoluteDuration = (relativeDuration / totalRelativeDuration) * wordInfo.duration_ms;
+      const absoluteEnd = absoluteStart + absoluteDuration;
+
+      if (visemeTimeline.length > 0) {
+          const prevViseme = visemeTimeline[visemeTimeline.length - 1];
+          if (absoluteStart < prevViseme.end) {
+             prevViseme.end = Math.round(absoluteStart - 1);
+          }
+      }
+
+      visemeTimeline.push({
+        viseme: viseme,
+        start: Math.round(absoluteStart),
+        end: Math.round(absoluteEnd),
+      });
+    }
+  });
+  return visemeTimeline;
 }
