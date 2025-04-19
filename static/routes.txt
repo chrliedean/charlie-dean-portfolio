@@ -11,6 +11,11 @@
 "description": "biographical information about Charlie Dean. Charlie Dean is an artist and fabricator originally from Baltimore, MD and currently living and working in Chicago, IL. A graduate of the School of the Art Institute of Chicago, he received his BFA in 2023. Working in sculpture, video, and various new media technologies, much of his work responds to the way the infrastructure, systems, and artifacts of the built world influence our culture and behavior. In addition to his studio practice, Dean also works as a freelance fabrication artist, set & props designer, videographer, and stagehand."
 },
 {
+    "path": "/about/cv",
+    "name": "CV",
+    "description": Charlie Dean's CV, which is short for Curriculum Vitae. He's currently freelancing for several event production companies as a scenic carpenter! He also went to school and curated a few shows, etc.
+}
+{
 "path": "/about-this-website",
 "name": "About This Website",
 "description": "Technical information about how CharlieDean.com was built. Tech stacks. It uses Svelte, SvelteKit, is hosted with vercel, etc. Don't bring this up unless a user seems interested."
