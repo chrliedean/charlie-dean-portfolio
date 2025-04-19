@@ -945,6 +945,7 @@ html {
   border-radius: 0;
   border: $line-width solid $g900;
   @include bevel(white, $g700, $shadow: true, $shadow-color: #b2b2b2, $shadow-distance: $line-width);
+  position: relative;
 }
 
 .checkbox:checked:after {
@@ -956,17 +957,31 @@ html {
   width: 16px;
   height: 16px;
   position: absolute;
-  top: 8px;
-  left: 12px;
+  bottom: 2px;
+  left: 2px;
 }
 
 .checkbox-label {
-  display: inline;
+  font-family: 'FindersKeepers', sans-serif;
+  display: inline-block;
   font-size:24px;
   line-height: 2px;
+  margin-left: 5px;
+  height: 16px;
 }
 
-input[type="text"] {
+.status-message {
+  background-color: $g100;
+  border: $line-width solid $g900;
+  padding: 10px;
+  border-radius: 5px;
+  font-family: 'FindersKeepers', sans-serif;
+  font-size: 25px;
+  @include bevel($g200, $g600);
+  
+}
+
+input[type="text"], input[type="email"], textarea {
   border-radius: 0 !important;
   outline: none;
   border: $line-width solid $g900;
@@ -977,6 +992,33 @@ input[type="text"] {
   }
 }
 
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  input, textarea {
+    width: 100%;
+    resize: none;
+    font-family: 'FindersKeepers', sans-serif;
+    font-size: 25px;
+    padding: 3px 6px
+  }
+
+  textarea {
+    height: 200px;
+  }
+
+  label {
+    font-family: 'Charcoal', sans-serif;
+  }
+
+
+  button {
+    width: fit-content;
+  }
+
+}
 .alert {
   z-index: 99999;
   .titlebar {
@@ -1020,6 +1062,10 @@ input[type="text"] {
   &:active {
     background-color: $g700;
     @include bevel($g800, $g400);
+  }
+
+  &:focus {
+    outline: ($line-width * 2) solid $colors-azul;
   }
 
   &.primary {

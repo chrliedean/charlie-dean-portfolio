@@ -29,6 +29,7 @@
   const sources: Record<string, AudioBufferSourceNode | null> = { drag: null };
   const gains: Record<string, GainNode> = {};
   let suppressMouseUp = false;
+  let keyDown = false;
 
   // Load an audio file into a buffer and create its gain node.
   async function load(name: string, url: string, volume = 0.5) {
@@ -108,6 +109,12 @@
         load("dscr1", "/media/dscr1.mp3", 0.4),
         load("dscr2", "/media/dscr2.mp3", 0.4),
         load("sosumi", "/media/sosumi.mp3", 0.4),
+        load("keydown1", "/media/keydown1.mp3", 0.4),
+        load("keydown2", "/media/keydown2.mp3", 0.4),
+        load("keydown3", "/media/keydown3.mp3", 0.4),
+        load("keyup1", "/media/keyup1.mp3", 0.4),
+        load("keyup2", "/media/keyup2.mp3", 0.4),
+        load("keyup3", "/media/keyup3.mp3", 0.4) 
       ]);
     })();
 
@@ -183,6 +190,23 @@
     }
     suppressMouseUp = false;
   }
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (!$soundEnabled || keyDown) return;
+    //plays a random keydown sound
+    const randomIndex = Math.floor(Math.random() * 3);
+    play(`keydown${randomIndex + 1}`);
+    keyDown = true;
+  }
+
+  function handleKeyUp(event: KeyboardEvent) {
+    if (!$soundEnabled) return;
+    //plays a random keyup sound
+    const randomIndex = Math.floor(Math.random() * 3);
+    play(`keyup${randomIndex + 1}`);
+    keyDown = false;
+  }
+  
 </script>
 
-<svelte:window on:mousedown={handleMouseDown} on:mouseup={handleMouseUp} />
+<svelte:window on:mousedown={handleMouseDown} on:mouseup={handleMouseUp} on:keydown={handleKeyDown} on:keyup={handleKeyUp} />

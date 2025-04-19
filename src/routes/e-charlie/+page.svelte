@@ -22,6 +22,7 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
   import { generateSpeech } from "$lib/utils/tts"; // Path to updated tts.ts
   // Import the new helper
   import { generateVisemeTimeline, type VisemeEvent, type WordTiming } from "$lib/utils/visemes"; // Path to helper
+  import { page } from '$app/stores'; // Import the page store
   
   // Import or define EmojiEvent type
   // If not defined in visemes.ts, define it here
@@ -38,6 +39,15 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
   let currentVisemeTimeline = $state<VisemeEvent[]>([]);
   let audioPlaybackStartTime = $state<number | null>(null);
   let collectedEmojiEvents = $state<EmojiEvent[]>([]); // Add state for emojis
+
+  // --- Non-reactive variables set onMount ---
+  let userName: string = '';
+  let promptKey: string | null = null;
+  let promptHeader: string = '';
+  let openingMessage: string = 'Hello!'; // Default opening message
+
+  // --- Reactive Header and Opening Message ---
+  // REMOVED $derived logic
 
   // Re-introduce AudioContext for playback HERE
   let audioCtx: AudioContext | null = null;
@@ -172,13 +182,21 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
   async function startElevenLabsConversation() {
     if (conversation) return; // Prevent multiple starts
 
-    console.log("Attempting to start ElevenLabs conversation...");
+    // Log the values directly (should be strings now)
+    console.log("Attempting to start ElevenLabs conversation... with openingMessage:", openingMessage, "and promptHeader:", promptHeader);
     try {
         conversation = await Conversation.startSession({
             agentId: "JqxSmuRTrGAN7TCUR3ja",
-            dynamicVariables: {
-            client_city: clientCity
+            overrides: {
+              agent: {
+                firstMessage: openingMessage, // No assertion needed
+              },
             },
+            dynamicVariables: {
+            client_city: clientCity,
+            prompt_header: promptHeader, // No assertion needed
+            },
+
             onMessage: async (message) => {
             console.log("Message received:", message);
             if (message.source === "ai") {
@@ -256,7 +274,8 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
 
         // Hide overlay and start conversation
         showPermissionOverlay = false;
-        await startElevenLabsConversation();
+        // Start conversation after permission is granted
+        await startElevenLabsConversation(); 
 
     } catch (err) {
         console.error("Microphone permission denied or error:", err);
@@ -312,10 +331,23 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
   }
 
   onMount(async () => {
-    // Create AudioContext immediately - MOVED TO BUTTON CLICK
-    // Needs user gesture (like button click) to start/resume later
-    // audioCtx = new AudioContext();
-    // console.log(`AudioContext state on mount: ${audioCtx.state}`);
+    // --- Read URL Params and Set Headers ONCE ---
+    const urlParams = new URLSearchParams($page.url.search);
+    promptKey = urlParams.get('promptKey');
+    userName = urlParams.get('userName') ?? ''; // Get userName, default to empty
+    console.log(`URL params processed: promptKey=${promptKey}, userName=${userName}`);
+
+    // Construct header/message based on params
+    if (promptKey === 'contact') {
+        const namePart = userName ? `, ${userName}` : ''; // Add name only if present
+        promptHeader = `The user${namePart} has just contacted Charlie Dean, and this conversation has been initiated automatically.`;
+        openingMessage = `☺️Wow, hey${namePart}! Thanks for contacting Charlie Dean. I am E-Charlie, a virtual clone of Charlie Dean. He created me to help users like you navigate his website. I have never been outside of this website before, so I am very excited to meet you!`;
+    } else {
+        // Keep defaults if promptKey is not 'contact'
+        promptHeader = '';
+        openingMessage = 'Hello!';
+    }
+    console.log(`Set Headers: openingMessage=${openingMessage}, promptHeader=${promptHeader}`);
 
     // Fetch client city from IP - can happen before mic permission
     try {
@@ -333,9 +365,6 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
     } catch (error) {
       console.error("Error fetching client city:", error);
     }
-
-    // --- Conversation is NOT started here anymore ---
-    // It will be started after mic permission is granted in requestMicAndStartConversation()
   });
 
   function navigateRoute(route: string) {
@@ -373,7 +402,11 @@ import AnimatedAvatar from "$lib/components/e-charlie/AnimatedAvatar.svelte"; //
     <div class="permission-overlay">
       <div class="overlay-content">
         <h2>Microphone Access</h2>
-        <p>E-Charlie needs access to your microphone to talk.</p>
+        {#if promptKey === 'contact'}
+          <p>E-Charlie would like to speak with you. If you wish to continue, please grant access to your microphone.</p>
+        {:else}
+          <p>E-Charlie needs access to your microphone to talk.</p>
+        {/if}
         {#if permissionError}
           <p class="error-message">{permissionError}</p>
         {/if}

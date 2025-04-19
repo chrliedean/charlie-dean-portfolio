@@ -18,6 +18,7 @@
 		"@sveltejs/kit": "^2.16.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
 		"@types/node": "^22.13.14",
+		"@types/nodemailer": "^6.4.17",
 		"@types/three": "^0.175.0",
 		"mdsvex": "^0.12.3",
 		"svelte": "^5.0.0",
@@ -32,6 +33,7 @@
 		"@sveltejs/adapter-vercel": "^5.6.3",
 		"@vercel/analytics": "^1.5.0",
 		"elevenlabs": "^1.56.1",
+		"nodemailer": "^6.10.1",
 		"sass-embedded": "^1.86.0",
 		"three": "^0.175.0"
 	}
