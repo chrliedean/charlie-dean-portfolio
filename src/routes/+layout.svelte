@@ -16,7 +16,7 @@
     import { windowConfig } from '$lib/config/windows';
 
 
-    //injectAnalytics();
+    injectAnalytics();
 </script>
 <SoundEffects />
 <section class="section">
