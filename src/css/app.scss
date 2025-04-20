@@ -1058,6 +1058,7 @@ form {
   user-select: none;
   -webkit-user-select: none;
   -webkit-user-drag: none;
+  margin-right: 5px;
 
   &:active {
     background-color: $g700;
@@ -1271,7 +1272,7 @@ a:visted.button {
   }
 }
 
-@media screen and (max-width: 479px) {
+@media screen and (max-width: 550px) {
   .menubar-item {
     overflow: visible;
   }
@@ -1279,7 +1280,7 @@ a:visted.button {
     overflow: hidden;
   }
   .menubar-right {
-    display: none;
+    display: none !important;
   }
 }
 
