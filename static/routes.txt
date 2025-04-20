@@ -67,7 +67,7 @@
 }
 {
 "path": "/portfolio/whos-57",
-"name": "Who's 57",
+"name": "Who's 57", 
 "description": "Charlie's most recent project, a game where players guess who's 57 years old. Multiplayer is also possible."
 },
 {
@@ -76,7 +76,7 @@
 "description": "The website for a friend of his, Liam Owings, who is a sculptor. The two of them share a studio."
 },
 {
-"path": "/browser?url=http://yigitural.com",
+"path": "/browser?url=http://yigitural.net",
 "name": "Browser - Yigit Ural",
 "description": "The website for another friend of his, Yigit Ural (pronounced YEET YURAL), who is a graphite artist."
 },
