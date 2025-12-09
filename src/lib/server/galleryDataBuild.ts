@@ -80,9 +80,23 @@ export const galleryData = {
       "parentFolder": "icns"
     },
     {
+      "path": "/img/icns/default.png",
+      "alt": "default",
+      "filename": "default.png",
+      "folder": "/icns",
+      "parentFolder": "icns"
+    },
+    {
       "path": "/img/icns/document.png",
       "alt": "document",
       "filename": "document.png",
+      "folder": "/icns",
+      "parentFolder": "icns"
+    },
+    {
+      "path": "/img/icns/excel.png",
+      "alt": "excel",
+      "filename": "excel.png",
       "folder": "/icns",
       "parentFolder": "icns"
     },
@@ -129,6 +143,13 @@ export const galleryData = {
       "parentFolder": "icns"
     },
     {
+      "path": "/img/icns/mailbox.png",
+      "alt": "mailbox",
+      "filename": "mailbox.png",
+      "folder": "/icns",
+      "parentFolder": "icns"
+    },
+    {
       "path": "/img/icns/movie.png",
       "alt": "movie",
       "filename": "movie.png",
@@ -153,6 +174,13 @@ export const galleryData = {
       "path": "/img/icns/sound.png",
       "alt": "sound",
       "filename": "sound.png",
+      "folder": "/icns",
+      "parentFolder": "icns"
+    },
+    {
+      "path": "/img/icns/stop.png",
+      "alt": "stop",
+      "filename": "stop.png",
       "folder": "/icns",
       "parentFolder": "icns"
     },
@@ -188,6 +216,13 @@ export const galleryData = {
       "path": "/img/pages/charlie.jpg",
       "alt": "charlie",
       "filename": "charlie.jpg",
+      "folder": "/pages",
+      "parentFolder": "pages"
+    },
+    {
+      "path": "/img/pages/homepage.avif",
+      "alt": "homepage",
+      "filename": "homepage.avif",
       "folder": "/pages",
       "parentFolder": "pages"
     },
@@ -339,6 +374,34 @@ export const galleryData = {
       "parentFolder": "portfolio"
     },
     {
+      "path": "/img/portfolio/postal-service/postalservice-1.jpeg",
+      "alt": "postalservice-1",
+      "filename": "postalservice-1.jpeg",
+      "folder": "/portfolio/postal-service",
+      "parentFolder": "portfolio"
+    },
+    {
+      "path": "/img/portfolio/postal-service/postalservice-2.jpeg",
+      "alt": "postalservice-2",
+      "filename": "postalservice-2.jpeg",
+      "folder": "/portfolio/postal-service",
+      "parentFolder": "portfolio"
+    },
+    {
+      "path": "/img/portfolio/postal-service/postalservice-3.jpeg",
+      "alt": "postalservice-3",
+      "filename": "postalservice-3.jpeg",
+      "folder": "/portfolio/postal-service",
+      "parentFolder": "portfolio"
+    },
+    {
+      "path": "/img/portfolio/whos-57/whos57-image.jpg",
+      "alt": "whos57-image",
+      "filename": "whos57-image.jpg",
+      "folder": "/portfolio/whos-57",
+      "parentFolder": "portfolio"
+    },
+    {
       "path": "/img/portfolio/working-from-home/workingfromhome-01.avif",
       "alt": "workingfromhome-01",
       "filename": "workingfromhome-01.avif",
@@ -475,6 +538,13 @@ export const galleryData = {
       "parentFolder": "ui"
     },
     {
+      "path": "/img/ui/foamjpg.jpg",
+      "alt": "foamjpg",
+      "filename": "foamjpg.jpg",
+      "folder": "/ui",
+      "parentFolder": "ui"
+    },
+    {
       "path": "/img/ui/paper-blue.png",
       "alt": "paper-blue",
       "filename": "paper-blue.png",
@@ -499,6 +569,13 @@ export const galleryData = {
       "path": "/img/ui/slider.png",
       "alt": "slider",
       "filename": "slider.png",
+      "folder": "/ui",
+      "parentFolder": "ui"
+    },
+    {
+      "path": "/img/ui/utah.avif",
+      "alt": "utah",
+      "filename": "utah.avif",
       "folder": "/ui",
       "parentFolder": "ui"
     }

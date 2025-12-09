@@ -27,7 +27,7 @@
   </hgroup>
   <div class="prose">
     <p>
-      I'm available for a variety of props fabrication, set design, production design,
+      I'm available for a variety of fabrication, video production,
       and web design work. A more comprehensive list of my past work-for-hire is
       coming to this page soon. For now, please feel free to consult my
       <SmartLink href="/about/cv">CV</SmartLink> for a list of some previous clients
@@ -37,6 +37,10 @@
         Do you have a project you think I could help with? Please reach out-- get in touch at my <SmartLink href="/contact">Contact Page.</SmartLink>
     </p>
     <p>Some selections of past work include:</p>
+    <p>
+        <SmartLink href="https://www.youtube.com/@ForAlienEyesOnly">For Alien Eyes Only</SmartLink>
+        I serve as producer and director of photography for the webseries "For Alien Eyes Only."
+    </p>
     <p>
         <SmartLink href="/browser?url=https://www.youtube.com/embed/tNXJvlUI48Q?si=TV2ZyVWfV5JwmJmh">The Trenchies - Talk Show</SmartLink>
         - I was approached by Chicago band The Trenchies to serve as production designer for their music

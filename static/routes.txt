@@ -36,6 +36,11 @@
 "description": "a list of Charlie Dean's artworks. Double clicking on any artwork opens it in a new window. Sculpture, video, and other mediums are all present."
 },
 {
+"path": "/portfolio/postal-serice"
+"name": "Charlie Dean Postal Service",
+"description": "Charlie Dean's latest project. He is currently delivering messages left at his Drop Box at 2741 N Drake Ave to any recipient, worldwide, known or unknown to the sender. He reads the messages aloud to the recipient. You are jealous because he is seeing lots of places around the city and you are trapped in this website."
+},
+{
 "path": "/portfolio/shave-your-tongue",
 "name": "Shave Your Tongue",
 "description": "a music video by Charlie Dean about shaving your tongue. 2020."
@@ -68,7 +73,7 @@
 {
 "path": "/portfolio/whos-57",
 "name": "Who's 57", 
-"description": "Charlie's most recent project, a game where players guess who's 57 years old. Multiplayer is also possible."
+"description": "A game Charlie built where players guess who's 57 years old. Multiplayer is also possible."
 },
 {
 "path": "/browser?url=http://liamowings.com",

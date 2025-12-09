@@ -5,7 +5,8 @@
 
     let icons = [
         { icon: "folder", label: "Portfolio", href: "/portfolio" },
-        { icon: "charlie", label: "E-Charlie", href: "/e-charlie" }
+        { icon: "charlie", label: "E-Charlie", href: "/e-charlie" },
+        { icon: "mailbox", label: "Postal Service", href: "/portfolio/postal-service" }
     ];
 
     let positions: { left: string; top: number }[] = [];
