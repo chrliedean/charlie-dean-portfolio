@@ -10,7 +10,7 @@ categories:
 published: true
 ---
 <script>
-    import Video from '$lib/components/video.svelte'
+    import Video from '$lib/components/Video.svelte'
     import SmartLink from '$lib/components/SmartLink.svelte'
     import GalleryList from '$lib/components/GalleryList.svelte'
 
